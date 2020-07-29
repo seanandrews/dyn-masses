@@ -4,14 +4,16 @@ execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 
 # simulation
-fname = 'simp3_std_medv_medr_STARTHIV_noiseless'
+fname = 'simp3_std_highv_medr_noiseless'
 
 # channelization
-chanstart, chanwidth, nchan = '-7.5km/s', '0.2km/s', 77
+chanstart, chanwidth, nchan = '-3.5km/s', '0.2km/s', 35
 
-# rebin the MS to these velocities?
+# window / rebin / shift the MS to these velocities?
+do_tavg = False
 do_rebin = True
-do_Hann = True
+do_Hann = False
+do_shift = False
 
 # mask parameters
 mstar, inc, PA, zr, rmax = 0.7, 40., 310., 0.23, 1.35
@@ -30,6 +32,7 @@ extens = ['.image', '.mask', '.model', '.pb', '.psf', '.residual', '.sumwt']
 os.system('rm -rf sim_MS/'+fname+'.ms')
 importuvfits(fitsfile='sim_uvfits/'+fname+'.uvfits', vis='sim_MS/'+fname+'.ms')
 
+
 # convolve with Hanning kernel?
 if do_Hann:
     # do the convolution
@@ -44,10 +47,25 @@ if do_Hann:
                  fitsfile='sim_uvfits/'+fname+'.uvfits', datacolumn='data',
                  overwrite=True)
 
+# time average?
+if do_tavg:
+    # do the time-averaging
+    fname_new = fname+'.tavg'
+    os.system('rm -rf sim_MS/'+fname_new+'.ms')
+    split(vis='sim_MS/'+fname+'.ms', outputvis='sim_MS/'+fname_new+'.ms',
+          datacolumn='data', timebin='30s')
+
+    # export the time-averaged file
+    fname = fname_new
+    exportuvfits(vis='sim_MS/'+fname+'.ms',
+                 fitsfile='sim_uvfits/'+fname+'.uvfits', datacolumn='data',
+                 overwrite=True)
+    
+
 # rebin velocity grid?
 if do_rebin:
     # do the regridding
-    fname_new = fname+'.rebin'
+    fname_new = fname+'.mstv2'
     os.system('rm -rf sim_MS/'+fname_new+'.ms')
     mstransform(vis='sim_MS/'+fname+'.ms', outputvis='sim_MS/'+fname_new+'.ms',
                 datacolumn='data', regridms=True, mode='velocity',
@@ -55,10 +73,43 @@ if do_rebin:
                 veltype='radio', restfreq=str(restfreq / 1e9)+'GHz')
 
     # export the regridded file
+    #fname = fname_new
+    exportuvfits(vis='sim_MS/'+fname_new+'.ms', 
+                 fitsfile='sim_uvfits/'+fname_new+'.uvfits', datacolumn='data',
+                 overwrite=True)
+
+    fname_new = fname+'.cvel2'
+    os.system('rm -rf sim_MS/'+fname_new+'.ms')
+    cvel(vis='sim_MS/'+fname+'.ms', outputvis='sim_MS/'+fname_new+'.ms',
+         mode='velocity', start=chanstart, width=chanwidth,
+         nchan=nchan, outframe='LSRK', veltype='radio', 
+         restfreq=str(restfreq / 1e9)+'GHz')
+
+    # export the regridded file
+    exportuvfits(vis='sim_MS/'+fname_new+'.ms',
+                 fitsfile='sim_uvfits/'+fname_new+'.uvfits', datacolumn='data',
+                 overwrite=True)
+
+
+if do_shift:
+    # do the interpolation
+    fname_new = fname+'.shift'
+    os.system('rm -rf sim_MS/'+fname_new+'.ms')
+    # with mstransform
+    mstransform(vis='sim_MS/'+fname+'.ms', outputvis='sim_MS/'+fname_new+'.ms',
+                datacolumn='data', regridms=True, mode='velocity',
+                start=chanstart, width=chanwidth, nchan=nchan, outframe='LSRK',
+                veltype='radio', restfreq=str(restfreq / 1e9)+'GHz')
+
+    # export the regridded file
     fname = fname_new
-    exportuvfits(vis='sim_MS/'+fname+'.ms', 
+    exportuvfits(vis='sim_MS/'+fname+'.ms',
                  fitsfile='sim_uvfits/'+fname+'.uvfits', datacolumn='data',
                  overwrite=True)
+
+
+sys.exit()
+
     
 
 # - Make a dirty image to guide a clean mask

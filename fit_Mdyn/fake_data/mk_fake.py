@@ -5,25 +5,24 @@ from vis_sample import vis_sample
 from vis_sample.file_handling import import_data_uvfits
 sys.path.append('../')
 from mk_FITScube import mk_FITScube
-from mk_FITScube_OLD import mk_FITScube_OLD
 
 # template file
-temp_uv  = 'cfg5_15min_dv0.2kms_v0-7.5kms_nch77'
+temp_uv  = 'cfg5_15min_dv0.1kms_v0-7.52kms_nch153'
 template = 'template_uvfits/template_'+temp_uv+'.uvfits'
 
 # output files
-fout = 'simp3_std_medv_medr_STARTHIR'
+fout = 'simp3_std_highv_medr'
 
 
 
 # RMS noise per naturally weighted beam per channel in output
-RMS = 6.6	# in mJy
+RMS = 9.4	# in mJy
 
 # inc, PA, mstar, Tb0, Tbq, r_l, z0, vsys, dx, dy]
 theta = [40., 130., 0.7, 65., -0.5, 200., 23., 0.0, 0.0, 0.0]
 FOV = 8.0
 dist = 150.
-Npix = 1024
+Npix = 256
 Tbmax = 500.
 restfreq = 230.538e9
 fixed = FOV, dist, Npix, Tbmax, restfreq
@@ -37,7 +36,7 @@ idx0  = hdr['CRPIX4']
 nchan = hdr['NAXIS4']
 dfreq = hdr['CDELT4']
 freqs = freq0 + (np.arange(nchan) - idx0 + 1) * dfreq
-vel = 2.9979245800000e10 * (1. - freqs / restfreq) / 100.
+vel = 2.99792e10 * (1. - freqs / restfreq) / 100.
 
 
 ### - compute a model cube (SkyImage object)

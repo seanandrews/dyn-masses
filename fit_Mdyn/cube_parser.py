@@ -5,7 +5,7 @@ from vis_sample.classes import *
 from simple_disk import simple_disk
 import matplotlib.pyplot as plt
 
-def mk_FITScube(inc=45., PA=90., mstar=1.0, dist=150., 
+def cube_parser(inc=45., PA=90., mstar=1.0, dist=150., 
                 Tb0=50., Tbq=-0.5, Tbmax=500., Tbmax_b=20.0,
                 tau0=100., tauq=0.0, taueta=100., taumax=None, r_l=250.,
                 z0=0.0, psi=1.0, zphi=100., dV0=None, dVq=None, dVmax=800., 
@@ -15,7 +15,8 @@ def mk_FITScube(inc=45., PA=90., mstar=1.0, dist=150.,
 
     # constants
     CC = 2.9979245800000e10
-    KK = 1.3807e-16
+    KK = 1.38066e-16
+    CC = 2.99792e10
 
     # generate an emission model
     disk = simple_disk(inc=inc, PA=PA, mstar=mstar, dist=dist, 

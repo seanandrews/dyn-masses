@@ -4,15 +4,19 @@ from astropy.io import fits
 from mk_FITScube import mk_FITScube
 from vis_sample import vis_sample
 from vis_sample.file_handling import import_data_uvfits
+from scipy.ndimage import convolve1d
 import emcee
 from multiprocessing import Pool
 os.environ["OMP_NUM_THREADS"] = "1"
 
 
 # parse and package the DATA
-data_set = 'simp3_std_medv_medr_STARTHIV_noiseless.hann.rebin'
+data_set = 'simp3_std_medv_medr_STARTSHORTINTEG_noiseless.tavg'
 data_file = 'fake_data/sim_uvfits/'+data_set+'.uvfits'
 dvis = import_data_uvfits(data_file)
+
+# perform windowing?
+window_model = False
 
 # extract the proper velocities from the data file
 dat = fits.open(data_file)
@@ -26,10 +30,17 @@ dvis.freqs = freqs
 
 # extract only a subset of the velocities to fit
 vidx_lo, vidx_hi = 19, 57
-dvis.VV = dvis.VV[vidx_lo:vidx_hi, :]
-dvis.wgts = dvis.wgts[:, vidx_lo:vidx_hi]
-dvis.freqs = dvis.freqs[vidx_lo:vidx_hi]
-dvis.rfreq = np.mean(dvis.freqs)
+# if we're windowing, pad the desired channels by the window span on each side
+if window_model:
+    dvis.VV = dvis.VV[vidx_lo-5:vidx_hi+5, :]
+    dvis.wgts = dvis.wgts[:, vidx_lo-5:vidx_hi+5]
+    dvis.freqs = dvis.freqs[vidx_lo-5:vidx_hi+5]
+    dvis.rfreq = np.mean(dvis.freqs)
+else:
+    dvis.VV = dvis.VV[vidx_lo:vidx_hi, :]
+    dvis.wgts = dvis.wgts[:, vidx_lo:vidx_hi]
+    dvis.freqs = dvis.freqs[vidx_lo:vidx_hi]
+    dvis.rfreq = np.mean(dvis.freqs)
 
 # fixed parameters
 FOV = 8.0
@@ -37,7 +48,7 @@ dist = 150.
 Npix = 256
 Tbmax = 500.
 restfreq = 230.538e9
-fixed = FOV, dist, Npix, Tbmax, restfreq
+fixed = FOV, dist, Npix, Tbmax, restfreq, window_model
 
 # calculate velocities (in m/s)
 CC = 2.9979245800000e10
@@ -71,7 +82,7 @@ def lnprob_globdata(theta):
 
     # parse input arguments
     dvis, gcf, corr, fixed = dpassit
-    FOV, dist, Npix, Tbmax, restfreq = fixed
+    FOV, dist, Npix, Tbmax, restfreq, window_model = fixed
 
     ### - PRIORS
     ptheta = np.empty_like(theta)
@@ -108,8 +119,8 @@ def lnprob_globdata(theta):
         ptheta[5] = 0.
     else: return -np.inf
 
-    # z0: p(z0) = uniform(0, 0.4)
-    if ((theta[6] >= 0.0) and (theta[6] <= 40.)):
+    # z0: p(z0) = uniform(0, 0.5)
+    if ((theta[6] >= 0.0) and (theta[6] <= 50.)):
         ptheta[6] = 0.
     else: return -np.inf
 
@@ -125,12 +136,12 @@ def lnprob_globdata(theta):
 
     # dx: p(dx) = normal(0.0, 0.1)		# adjusted for each case
     if ((theta[9] > -0.2) & (theta[9] < 0.2)):
-        ptheta[9] = -0.5 * (theta[9] - 0.0)**2 / 0.08**2
+        ptheta[9] = 0.	#-0.5 * (theta[9] - 0.0)**2 / 0.08**2
     else: return -np.inf
 
     # dy: p(dy) = normal(0.0, 0.1)		# adjusted for each case
     if ((theta[10] > -0.2) & (theta[10] < 0.2)):
-        ptheta[10] = -0.5 * (theta[10] - 0.0)**2 / 0.08**2
+        ptheta[10] = 0.	#-0.5 * (theta[10] - 0.0)**2 / 0.08**2
     else: return -np.inf
     
     # constants
@@ -151,8 +162,24 @@ def lnprob_globdata(theta):
     modl_vis = vis_sample(imagefile=model, mu_RA=theta[9], mu_DEC=theta[10], 
                           gcf_holder=gcf, corr_cache=corr, mod_interp=False)
 
+    # window the visibilities
+    if window_model:
+        # define and perform the window convolution
+        hann = np.array([0.0, 0.25, 0.5, 0.25, 0.0])
+        modl_vis_re = convolve1d(modl_vis.real, hann, axis=1, mode='nearest')
+        modl_vis_im = convolve1d(modl_vis.imag, hann, axis=1, mode='nearest')
+        modl_vis = modl_vis_re + 1.0j*modl_vis_im
+
+        # excise the padded boundary channels to avoid edge effects
+        modl_vis = modl_vis[:,5:-5]
+        data_vis = dvis.VV.T[:,5:-5]
+        weights = dvis.wgts[:,5:-5]
+    else:
+        data_vis = dvis.VV.T
+        weights = dvis.wgts
+
     # compute the log-likelihood
-    logL = -0.5 * np.sum(dvis.wgts * np.absolute(dvis.VV.T - modl_vis)**2)
+    logL = -0.5 * np.sum(weights * np.absolute(data_vis - modl_vis)**2)
 
     # return the posterior
     return logL + np.sum(ptheta)
@@ -165,7 +192,7 @@ os.system('rm -rf '+filename)
 backend = emcee.backends.HDFBackend(filename)
 backend.reset(nwalk, ndim)
 
-max_steps = 10000
+max_steps = 5000
 # perform the inference
 with Pool() as pool:
     # set up sampler

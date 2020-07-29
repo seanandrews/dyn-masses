@@ -71,12 +71,18 @@ plt.show()
 # how to do this quickly on all visibilities?
 from scipy.ndimage import convolve1d
 
+print('here i am')
 t0 = time.time()
-testhann = convolve1d(raw_vis.VV.real, window, axis=0, mode='nearest')
+testhann_real = convolve1d(raw_vis.VV.real, window, axis=0, mode='nearest')
+testhann_imag = convolve1d(raw_vis.VV.imag, window, axis=0, mode='nearest')
 print(time.time()-t0)
 
-print(testhann.shape)
 
-diff_21 = (myhann.real - testhann[:,idx]) / myhann.real
+diff_21 = (casa_vis.VV.real[:,idx] - testhann_real[:,idx]) / casa_vis.VV.real[:,idx]
 plt.plot(raw_vis.freqs[10:-10] / 1e9, diff_21[10:-10], 'oC0')
 plt.show()
+
+diff_21 = (casa_vis.VV.imag[:,idx] - testhann_imag[:,idx]) / casa_vis.VV.imag[:,idx]
+plt.plot(raw_vis.freqs[10:-10] / 1e9, diff_21[10:-10], 'oC0')
+plt.show()
+

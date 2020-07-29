@@ -7,48 +7,88 @@ from astropy.convolution import convolve, Gaussian2DKernel
 
 class simple_disk:
     """
-    Simple disk structure to explore analytic kinematic features.
-
     Args:
+        # Geometric Parameters
         inc (float): Inclination of the source in [degrees].
         PA (float): Position angle of the source in [degrees].
         x0 (Optional[float]): Source center offset along x-axis in [arcsec].
         y0 (Optional[float]): Source center offset along y-axis in [arcsec].
         dist (Optional[float]): Distance to the source in [pc].
         mstar (Optional[float]): Mass of the central star in [Msun].
+        r_min (Optional[float]): Inner radius in [au].
+        r_max (Optional[float]): Outer radius in [au].
+        r0 (Optional[float]): Normalization radius in [au]. (r0 must be < r_l)
+        r_l (Optional[float]): Turn-over radius in [au].
+        z0 (Optional[float]): Emission height in [au] at r0.
+        zpsi (Optional[float]): Index of z_l profile for r < r_l.
+        zphi (Optional[float]): Exponential taper index of z_l profile at 
+            r > r_l.
+
+        # Brightness Temperatures
+        Tb0 (Optional[float]): Brightness temperature in [K] at r0.
+        Tbq (Optional[float]): Index of Tb profile for r < r_l.
+        Tbeps (Optional[float]): Exponential taper index of Tb profile for 
+            r > r_l.
+        Tbmax (Optional[float]): Maximum Tb in [K].
+        Tbmax_b (Optional[float]): Maximum Tb for back side of disk in [K].
+
+        # Optical depth of front-side
+        tau0 (Optional[float]): Optical depth at r0.
+        tauq (Optional[float]): Index of optical depth profile for r < r_l
+        taueta (Optional[float]): Exponential taper index for optical depth
+            profile at r > r_l.
+        taumax (Optional[float]): Maximum optical depth.
+
+        # Line-widths
+        dV0 (Optional[float]): Doppler line width in [m/s] at r0.
+        dVq (Optional[float]): Index of line-width profile.
+        dVmax (Optional[float]): Maximum line-width.
+        xi_nt (Optional[float]): Non-thermal line-width fraction (of sound 
+	    speed for the gas); can use if dV0, dVq are None.
+
+        # Observational Parameters
         FOV (Optional[float]): Field of view of the model in [arcsec].
         Npix (Optional[int]): Number of pixels along each axis.
-        Tb0 (Optional[float]): Brightness temperature in [K] at 100 au.
-        Tbq (Optional[float]): Exponent of the brightness temperature
-            radial profile.
-        dV0 (Optional[float]): Doppler line width in [m/s] at 1 arcsec.
-        dVq (Optional[float]): Exponent of the line width radial profile.
+        mu_l (Optional[float]): Mean atomic weight for line of interest.
+
     """
 
+    # Establish constants
     mu = 2.37
-    fwhm = 2.*np.sqrt(2.*np.log(2.))
     msun = 1.988e30
+
+    # Establish useful conversion factors
+    fwhm = 2.*np.sqrt(2.*np.log(2.))
     nwrap = 3
 
-    def __init__(self, inc, PA, x0=0.0, y0=0.0, mstar=1.0, dist=100.0, 
-                 z0=0.0, psi=1.0, zphi=1.0, r_min=0.0, r_max=500.0, Tb0=50.0,
-                 Tbq=-1.0, Tbmax=100.0, Tbmax_b=20.0, dV0=None, dVq=None,
-                 dVmax=300.0, tau0=5.0, tauq=0.0, taueta=50., taumax=None, 
-                 r_l=200., FOV=None, Npix=128):
+
+    def __init__(self, inc, PA, x0=0., y0=0., dist=100., mstar=1., 
+                 r_min=0., r_max=500., r0=10., r_l=100., 
+                 z0=0., zpsi=1., zphi=np.inf,
+                 Tb0=50., Tbq=0.5, Tbeps=np.inf, Tbmax=200., Tbmax_b=20., 
+                 tau0=100., tauq=0., taueta=np.inf, taumax=None,
+                 dV0=None, dVq=None, dVmax=1000., xi_nt=0.,
+                 FOV=None, Npix=128, mu_l=28):
+
 
         # Set the disk geometrical properties.
         self.x0, self.y0, self.inc, self.PA, self.dist = x0, y0, inc, PA, dist
-        self.z0, self.psi, self.zphi = z0, psi, zphi
-        self.r_min, self.r_max = r_min, r_max
-        self.FOV = 2.2 * self.r_max / self.dist if FOV is None else FOV
-        self.Npix = Npix
+        self.z0, self.zpsi, self.zphi = z0, zpsi, zphi
+        self.r_l, self.r0, self.r_min, self.r_max = r_l, r0, r_min, r_max
 
         # Define the velocity, brightness and linewidth radial profiles.
         self.mstar = mstar
-        self.Tb0, self.Tbq, self.Tbmax, self.Tbmax_b = Tb0, Tbq, Tbmax, Tbmax_b
-        self.dV0, self.dVq, self.dVmax = dV0, dVq, dVmax
+        self.Tb0, self.Tbq, self.Tbeps = Tb0, Tbq, Tbeps
+        self.Tbmax, self.Tbmax_b = Tbmax, Tbmax_b
+        self.dV0, self.dVq, self.dVmax, self.xi_nt = dV0, dVq, dVmax, xi_nt
         self.tau0, self.tauq, self.taueta = tau0, tauq, taueta
-        self.taumax, self.r_l = taumax, r_l
+        self.taumax = taumax
+
+        # Set the observational parameters.
+        self.FOV = 2.2 * self.r_max / self.dist if FOV is None else FOV
+        self.Npix = Npix
+        self.mu_l = mu_l
+
 
         # Check if dV should be set by thermal broadening.
         self._check_thermal_broadening()
@@ -60,6 +100,7 @@ class simple_disk:
         self._set_linewidth()
         self._set_rotation()
         self._set_tau()
+
 
     # -- Model Building Functions -- #
 
@@ -88,7 +129,7 @@ class simple_disk:
         self.t_disk = np.arctan2(self.y_disk, self.x_disk)
 
         f = self.disk_coords(x0=self.x0, y0=self.y0, inc=self.inc, PA=self.PA,
-                             z0=self.z0, psi=self.psi, zphi=self.zphi)
+                             z0=self.z0, zpsi=self.zpsi, zphi=self.zphi)
 
         self.r_sky_f = f[0] * self.dist
         self.t_sky_f = f[1]
@@ -97,7 +138,7 @@ class simple_disk:
         if self.z0 != 0.0:
             self._flat_disk = False
             b = self.disk_coords(x0=self.x0, y0=self.y0, inc=-self.inc,
-                                 PA=self.PA, z0=self.z0, psi=self.psi,
+                                 PA=self.PA, z0=self.z0, zpsi=self.zpsi,
                                  zphi=self.zphi)
         else:
             self._flat_disk = True
@@ -110,12 +151,11 @@ class simple_disk:
         # Define masks noting where the disk extends to.
 
         self._in_disk_f = np.logical_and(self.r_sky_f >= self.r_min,
-                                         self.r_sky_f <= self.r_l)
+                                         self.r_sky_f <= self.r_max)
         self._in_disk_b = np.logical_and(self.r_sky_b >= self.r_min,
-                                         self.r_sky_b <= self.r_l)
+                                         self.r_sky_b <= self.r_max)
         self._in_disk = np.logical_and(self.r_disk >= self.r_min,
-                                       self.r_disk <= self.r_l)
-        # REVERT BACK TO self.r_max INSTEAD OF self.r_l
+                                       self.r_disk <= self.r_max)
 
     @property
     def r_sky(self):
@@ -172,13 +212,15 @@ class simple_disk:
         """
         Sets the brightness profile in [K].
         """
-        self.Tb_f = self.Tb0 * np.power(self.r_sky_f / 100.0, self.Tbq)
+        self.Tb_f = self.Tb0 * (self.r_sky_f / self.r0)**(-self.Tbq) * \
+                    np.exp(-(self.r_sky_f / self.r_l)**self.Tbeps)
         self.Tb_f = np.clip(self.Tb_f, 0.0, self.Tbmax)
         self.Tb_f = np.where(self._in_disk_f, self.Tb_f, 0.0)
         if self._flat_disk:
             self.Tb_b = None
         else:
-            self.Tb_b = self.Tb0 * np.power(self.r_sky_b / 100.0, self.Tbq)
+            self.Tb_b = self.Tb0 * (self.r_sky_f / self.r0)**(-self.Tbq) * \
+                        np.exp(-(self.r_sky_f / self.r_l)**self.Tbeps)
             self.Tb_b = np.clip(self.Tb_b, 0.0, self.Tbmax_b)
             self.Tb_b = np.where(self._in_disk_b, self.Tb_b, 0.0)
 
@@ -203,7 +245,7 @@ class simple_disk:
         """
         Sets the tau radial profile.
         """
-        self.tau = self.tau0 * np.power(self.r_sky_f / self.r_l, self.tauq) * \
+        self.tau = self.tau0 * (self.r_sky_f / self.r0)**self.tauq * \
                    np.exp(-(self.r_sky_f / self.r_l)**self.taueta)
         self.tau = np.where(self._in_disk_f, self.tau, 0.0)
 
@@ -287,7 +329,8 @@ class simple_disk:
         """
         Disk-frame brightness profile.
         """
-        Tb = self.Tb0 * np.power(self.r_disk / 100.0, self.Tbq)
+        Tb = self.Tb0 * (self.r_sky_f / self.r0)**(-self.Tbq) * \
+             np.exp(-(self.r_sky_f / self.r_l)**self.Tbeps)
         return np.where(self._in_disk, Tb, np.nan)
 
     @property
@@ -295,7 +338,7 @@ class simple_disk:
         """
         Disk-frame brightness profile.
         """
-        dV = self.dV0 * np.power(self.r_disk / 100.0, self.dVq)
+        dV = self.dV0 * np.power(self.r_disk / self.r0, self.dVq)
         return np.where(self._in_disk, dV, np.nan)
 
     def _calculate_projected_vkep(self, r, z, t=0.0, inc=90.0):
@@ -319,7 +362,7 @@ class simple_disk:
 
     # -- Deprojection Functions -- #
 
-    def disk_coords(self, x0=0.0, y0=0.0, inc=0.0, PA=0.0, z0=0.0, psi=0.0,
+    def disk_coords(self, x0=0.0, y0=0.0, inc=0.0, PA=0.0, z0=0.0, zpsi=0.0,
                     zphi=0.0, frame='cylindrical'):
         r"""
         Get the disk coordinates given certain geometrical parameters and an
@@ -381,12 +424,9 @@ class simple_disk:
         """
         Returns the emission height in [arcsec].
         """
-        z = self.z0 * np.power(r * self.dist / 100.0, self.psi) / self.dist
-        #z += self.z1 * np.power(r * self.dist / 100.0, self.phi) / self.dist
-        z *= np.exp(-(r * self.dist / self.r_l)**self.zphi)
-        if self.z0 >= 0.0:
-            return np.clip(z, a_min=0.0, a_max=None)
-        return np.clip(z, a_min=None, a_max=0.0)
+        z = self.z0 * (r * self.dist / self.r0)**self.zpsi * \
+            np.exp(-(r * self.dist / self.r_l)**self.zphi) / self.dist
+        return np.clip(z, 0., None)
 
     @staticmethod
     def _rotate_coords(x, y, PA):
@@ -475,7 +515,7 @@ class simple_disk:
     # -- Helper Functions -- #
 
     def set_coordinates(self, x0=None, y0=None, inc=None, PA=None, dist=None,
-                        z0=None, psi=None, r_min=None, r_max=None, FOV=None,
+                        z0=None, zpsi=None, r_min=None, r_max=None, FOV=None,
                         Npix=None):
         """
         Helper function to redefine the coordinate system.
@@ -486,7 +526,7 @@ class simple_disk:
         self.PA = self.PA if PA is None else PA
         self.dist = self.dist if dist is None else dist
         self.z0 = self.z0 if z0 is None else z0
-        self.psi = self.psi if psi is None else psi
+        self.zpsi = self.zpsi if zpsi is None else zpsi
         self.r_min = self.r_min if r_min is None else r_min
         self.r_max = self.r_max if r_max is None else r_max
         self.FOV = self.FOV if FOV is None else FOV
@@ -550,16 +590,10 @@ class simple_disk:
         Returns:
             cube (array): A 3D image cube.
         """
-        # Define the velocity axis.
-
-        vchan = abs(np.diff(velax)).mean()
-        vbins = np.linspace(velax[0] - 0.5 * vchan,
-                            velax[-1] + 0.5 * vchan,
-                            velax.size + 1)
 
         # Make the image cube.
 
-        cube = np.array([self.get_channel(vbins[i], vbins[i+1], dv0=dv0)
+        cube = np.array([self.get_channel(velax[i], dv0=dv0)
                          for i in range(velax.size)])
         assert cube.shape[0] == velax.size, "not all channels created"
 
@@ -584,7 +618,7 @@ class simple_disk:
             noise = np.zeros(cube.shape)
         return cube + noise
 
-    def get_channel(self, v_min, v_max, dv0=None, bmaj=None, bmin=None,
+    def get_channel(self, velax, dv0=None, bmaj=None, bmin=None,
                     bpa=0.0, rms=0.0):
         """
         Calculate the channel emission in [K]. Can include velocity
@@ -607,11 +641,6 @@ class simple_disk:
             channel (ndarray): A synthesied channel map in [K].
         """
 
-        # Check the channel boundaries are OK.
-
-        v_max = np.median(self.dV) if v_max is None else v_max
-        v_min = -v_max if v_min is None else v_min
-
         # Check to see if there are one or two perturbations provided.
 
         try:
@@ -624,14 +653,14 @@ class simple_disk:
 
         # Calculate the flux from the front side of the disk.
 
-        flux_f = self._calc_flux(v_min, v_max, dv0_f, 'f')
+        flux_f = self._calc_flux(velax, dv0_f, 'f')
 
         # If `z0 != 0.0`, can combine the front and far sides based on a
         # two-slab approximation.
 
         if not self._flat_disk:
-            flux_b = self._calc_flux(v_min, v_max, dv0_b, 'b')
-            frac_f, frac_b = self._calc_frac(v_min, v_max, dv0_b)
+            flux_b = self._calc_flux(velax, dv0_b, 'b')
+            frac_f, frac_b = self._calc_frac(velax, dv0_b)
             flux = frac_f * flux_f + frac_b * flux_b
         else:
             flux = flux_f
@@ -650,8 +679,7 @@ class simple_disk:
         noise *= rms / np.std(noise)
         return flux + noise
 
-    def get_channel_tau(self, v_min, v_max, dv0=0.0, bmaj=None, bmin=None,
-                        bpa=0.0):
+    def get_channel_tau(self, velax, dv0=0.0, bmaj=None, bmin=None, bpa=0.0):
         """
         As ``get_channel``, but returns the optical depth of the front side of
         the disk.
@@ -671,14 +699,9 @@ class simple_disk:
                 optical depth.
         """
 
-        # Check the channel boundaries are OK.
-
-        v_max = np.median(self.dV) if v_max is None else v_max
-        v_min = -v_max if v_min is None else v_min
-
         # Calculate the optical depth.
 
-        tau = self._calc_tau(v_min=v_min, v_max=v_max, dv0=dv0)
+        tau = self._calc_tau(velax, dv0=dv0)
 
         # Include a beam convolution if necessary.
 
@@ -687,16 +710,14 @@ class simple_disk:
             tau = convolve(tau, beam)
         return tau
 
-    def _calc_tau(self, v_min, v_max, dv0=0.0):
+    def _calc_tau(self, velax, dv0=0.0):
         """
         Calculate the average tau profile assuming a single Gaussian component.
         """
         tau, dV, v0 = self.tau, self.dV_f, self.v0_f + dv0
-        return tau * np.exp(-((np.mean(v_min, v_max) - v0) / dV)**2)
-        #f = tau * np.pi**0.5 * dV / 2.0 / (v_max - v_min)
-        #return f * (erf((v0 - v_min) / dV) - erf((v0 - v_max) / dV))
+        return tau * np.exp(-((velax - v0) / dV)**2)
 
-    def _calc_flux(self, v_min, v_max, dv0=0.0, side='f'):
+    def _calc_flux(self, velax, dv0=0.0, side='f'):
         """
         Calculate the emergent flux assuming single Gaussian component.
         """
@@ -707,16 +728,14 @@ class simple_disk:
         else:
             quote = "Unknown 'side' value {}. Must be 'f' or 'r'."
             raise ValueError(quote.format(side))
-        return Tb * np.exp(-((np.mean([v_min, v_max]) - v0) / dV)**2)
-        #f = Tb * np.pi**0.5 * dV / 2.0 / (v_max - v_min)
-        #return f * (erf((v0 - v_min) / dV) - erf((v0 - v_max) / dV))
+        return Tb * np.exp(-((velax - v0) / dV)**2)
 
-    def _calc_frac(self, v_min, v_max, dv0=0.0):
+    def _calc_frac(self, velax, dv0=0.0):
         """
         Calculates the fraction of the front side of the disk realtive to the
         back side based on the optical depth.
         """
-        tau = self._calc_tau(v_min=v_min, v_max=v_max, dv0=dv0)
+        tau = self._calc_tau(velax, dv0=dv0)
         return 1.0 - np.exp(-tau), np.exp(-tau)
 
     @staticmethod
