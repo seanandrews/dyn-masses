@@ -55,7 +55,8 @@ class simple_disk:
 
     # Establish constants
     mu = 2.37
-    msun = 1.988e30
+    msun = 1.98847e30
+    mH = sc.m_p + sc.m_e
 
     # Establish useful conversion factors
     fwhm = 2.*np.sqrt(2.*np.log(2.))
@@ -190,14 +191,14 @@ class simple_disk:
         Sets the Doppler linewidth profile in [m/s].
         """
         if self.dV0 is None:
-            csound_f = np.sqrt(sc.k * self.Tb_f / self.mu / sc.m_p)
+            csound_f = np.sqrt(sc.k * self.Tb_f / self.mu / self.mH)
             self.dV_f = csound_f * \
                         np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2)
             self.dV_f = np.clip(self.dV_f, 0.0, self.dVmax)
             if self._flat_disk:
                 self.dV_b = None
             else:
-                csound_b = np.sqrt(sc.k * self.Tb_b / self.mu / sc.m_p)
+                csound_b = np.sqrt(sc.k * self.Tb_b / self.mu / self.mH)
                 self.dV_b = csound_b * \
                             np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2) 
                 self.dV_b = np.clip(self.dV_b, 0.0, self.dVmax)
@@ -343,7 +344,7 @@ class simple_disk:
         Disk-frame line-width profile.
         """
         if self.dV0 is None:
-            csound = np.sqrt(sc.k * Tb_disk / self.mu / self.m_p)
+            csound = np.sqrt(sc.k * Tb_disk / self.mu / self.mH)
             dV = csound * np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2)
         else:
             if self.dVq is None:
