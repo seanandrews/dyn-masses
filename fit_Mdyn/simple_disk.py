@@ -91,7 +91,7 @@ class simple_disk:
 
 
         # Check if dV should be set by thermal broadening.
-        self._check_thermal_broadening()
+        #self._check_thermal_broadening()
         self._check_optical_depth()
 
         # Build the disk model.
@@ -169,17 +169,6 @@ class simple_disk:
     def v0_sky(self):
         return self.v0_f
 
-    def _check_thermal_broadening(self, mu=28.0):
-        """
-        Set the Doppler linewidth to the themral linewidth if no ``dV0`` or
-        ``dVq`` values are provided when instantiating the class.
-        """
-        if self.dV0 is None:
-            #self.dV0 = (2. * sc.k * self.Tb0 / self.mu / sc.m_p)**0.5
-            self.dV0 = (2. * sc.k * self.Tb0 / mu / sc.m_p)**0.5
-        if self.dVq is None:
-            self.dVq = 0.5 * self.Tbq
-
     def _check_optical_depth(self):
         """
         Set the optical depth parameters if they were not set when the class
@@ -200,13 +189,28 @@ class simple_disk:
         """
         Sets the Doppler linewidth profile in [m/s].
         """
-        self.dV_f = self.dV0 * np.power(self.r_sky_f / 100.0, self.dVq)
-        self.dV_f = np.clip(self.dV_f, 0.0, self.dVmax)
-        if self._flat_disk:
-            self.dV_b = None
+        if self.dV0 is None:
+            csound_f = np.sqrt(sc.k * self.Tb_f / self.mu / sc.m_p)
+            self.dV_f = csound_f * \
+                        np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2)
+            self.dV_f = np.clip(self.dV_f, 0.0, self.dVmax)
+            if self._flat_disk:
+                self.dV_b = None
+            else:
+                csound_b = np.sqrt(sc.k * self.Tb_b / self.mu / sc.m_p)
+                self.dV_b = csound_b * \
+                            np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2) 
+                self.dV_b = np.clip(self.dV_b, 0.0, self.dVmax)
         else:
-            self.dV_b = self.dV0 * np.power(self.r_sky_b / 100.0, self.dVq)
-            self.dV_b = np.clip(self.dV_b, 0.0, self.dVmax)
+            if self.dVq is None:
+                self.dVq = -0.5 * self.Tbq
+            self.dV_f = self.dV0 * (self.r_sky_f / self.r0)**self.dVq
+            self.dV_f = np.clip(self.dV_f, 0.0, self.dVmax)
+            if self._flat_disk:
+                self.dV_b = None
+            else:
+                self.dV_b = self.dV0 * (self.r_sky_b / self.r0)**self.dVq
+                self.dV_b = np.clip(self.dV_b, 0.0, self.dVmax)
 
     def _set_brightness(self):
         """
@@ -336,9 +340,15 @@ class simple_disk:
     @property
     def dV_disk(self):
         """
-        Disk-frame brightness profile.
+        Disk-frame line-width profile.
         """
-        dV = self.dV0 * np.power(self.r_disk / self.r0, self.dVq)
+        if self.dV0 is None:
+            csound = np.sqrt(sc.k * Tb_disk / self.mu / self.m_p)
+            dV = csound * np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2)
+        else:
+            if self.dVq is None:
+                self.dVq = -0.5 * self.Tbq
+            dV = self.dV0 * (self.r_disk / self.r0)**self.dVq
         return np.where(self._in_disk, dV, np.nan)
 
     def _calculate_projected_vkep(self, r, z, t=0.0, inc=90.0):
