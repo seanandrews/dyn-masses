@@ -4,11 +4,11 @@ from astropy.io import fits
 from vis_sample import vis_sample
 from vis_sample.file_handling import import_data_uvfits
 sys.path.append('../')
-from mk_FITScube import mk_FITScube
+from cube_parser import cube_parser
 
 # template file
-temp_uv  = 'cfg5_15min_dv0.1kms_v0-7.52kms_nch153'
-template = 'template_uvfits/template_'+temp_uv+'.uvfits'
+temp_uv  = 'template_ch100ms_V0-10kms_nchan201_config5_dt15min_tinteg30s'
+template = 'template_uvfits/'+temp_uv+'.uvfits'
 
 # output files
 fout = 'simp3_std_highv_medr'
@@ -18,15 +18,15 @@ fout = 'simp3_std_highv_medr'
 # RMS noise per naturally weighted beam per channel in output
 RMS = 9.4	# in mJy
 
-# inc, PA, mstar, Tb0, Tbq, r_l, z0, vsys, dx, dy]
-theta = [40., 130., 0.7, 65., -0.5, 200., 23., 0.0, 0.0, 0.0]
+# inc, PA, mstar, r_l, z0, zpsi, Tb0, Tbq, Tbmax_b, xi_nt, vsys, dx, dy]
+theta = [40., 130., 0.7, 200., 2.3, 1.0, 205., -0.5, 20., 0.05, 0., 0., 0.]
 FOV = 8.0
 dist = 150.
 Npix = 256
 Tbmax = 500.
+r0 = 10.
+mu_l = 28.
 restfreq = 230.538e9
-fixed = FOV, dist, Npix, Tbmax, restfreq
-
 
 ### - extract the velocities from the template file
 dat = fits.open(template)
@@ -40,15 +40,16 @@ vel = 2.99792e10 * (1. - freqs / restfreq) / 100.
 
 
 ### - compute a model cube (SkyImage object)
-foo = mk_FITScube(inc=theta[0], PA=theta[1], mstar=theta[2], FOV=FOV, 
-                  dist=dist, Npix=Npix, Tb0=theta[3], Tbq=theta[4], 
-                  r_l=theta[5], z0=theta[6], vsys=theta[7], Tbmax=Tbmax, 
-                  r_max=theta[5], restfreq=restfreq, vel=vel)
+foo = cube_parser(inc=theta[0], PA=theta[1], dist=dist, mstar=theta[2], r0=r0, 
+                  r_l=theta[3], z0=theta[4], zpsi=theta[5], 
+                  Tb0=theta[6], Tbq=theta[7], Tbmax=Tbmax, Tbmax_b=theta[8],
+                  xi_nt=theta[9], FOV=FOV, Npix=Npix, mu_l=mu_l, 
+                  Vsys=theta[10], restfreq=restfreq, vel=vel)
 
 
 ### - sample it on the template (u,v) spacings: NOISE FREE
 os.system('rm -rf sim_uvfits/'+fout+'_noiseless.uvfits')
-vis_sample(imagefile=foo, uvfile=template, mu_RA=theta[7], mu_DEC=theta[8], 
+vis_sample(imagefile=foo, uvfile=template, mu_RA=theta[11], mu_DEC=theta[12], 
            mod_interp=False, outfile='sim_uvfits/'+fout+'_noiseless.uvfits')
 
 
