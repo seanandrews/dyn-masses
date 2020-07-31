@@ -3,7 +3,8 @@ import numpy as np
 sys.path.append('../')
 from cube_parser import cube_parser
 
-startv = -15.           # starting velocity (LSRK), wrt Vsys, in [km/s]
+# Specify template parameters
+startv = -10.           # starting velocity (LSRK), wrt Vsys, in [km/s]
 ch_spacing = 0.1        # velocity channel spacing in [km/s]
 nchan = None            # (optional): number of channels; if None, will make 
                         # the cube symmetric around Vsys
@@ -13,7 +14,7 @@ RA = 240.               # phase center RA in [degrees]
 DEC = -40.              # phase center DEC in [degrees]
 config = '5'            # ALMA configuration
 total_time = '15min'    # total on-source time for simulation
-integ = '30s'           # integration time interval for simulation
+integ = '6s'            # integration time interval for simulation
 
 
 
@@ -35,5 +36,19 @@ foo = cube_parser(dist=150., r_max=300., r_l = 300., FOV=8.0, Npix=256,
                   vel=vel, outfile='template_cubes/'+outfile+'.fits')
 
 # notification
-print('Wrote a cube: template_cubes/'+outfile+'.fits')
+print('Wrote a cube: \n    template_cubes/'+outfile+'.fits')
 
+
+
+# Mock observations
+
+# output a parameter file (ASCII) for use inside CASA
+f = open('template.pars.txt', 'w')
+f.write(outfile+'\n')
+f.write(config+'\n')
+f.write(total_time+'\n')
+f.write(integ+'\n')
+f.close()
+
+# run simulation script in CASA
+os.system('casa --nologger --nologfile -c mock_obs_alma.py')
