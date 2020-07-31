@@ -5,12 +5,15 @@ from vis_sample.classes import *
 from simple_disk import simple_disk
 import matplotlib.pyplot as plt
 
-def cube_parser(inc=45., PA=90., mstar=1.0, dist=150., 
-                Tb0=50., Tbq=-0.5, Tbmax=500., Tbmax_b=20.0,
-                tau0=100., tauq=0.0, taueta=100., taumax=None, r_l=250.,
-                z0=0.0, psi=1.0, zphi=100., dV0=None, dVq=None, dVmax=800., 
-                FOV=5., Npix=256, RA=240., DEC=-40., restfreq=230.538e9,
-                vsys=0., r_max=500., vel=None, datafile=None, outfile=None):
+def cube_parser(inc=30., PA=40., x0=0., y0=0., dist=100., mstar=1., 
+                r_min=0., r_max=500., r0=10., r_l=100.,
+                z0=0., zpsi=1., zphi=np.inf,
+                Tb0=50., Tbq=-0.5, Tbeps=np.inf, Tbmax=500., Tbmax_b=20.,
+                tau0=100., tauq=0., taueta=np.inf, taumax=None, 
+                dV0=None, dVq=None, dVmax=1000, xi_nt=0., 
+                FOV=None, Npix=128, mu_l=28, 
+                RA=240., DEC=-40., restfreq=230.538e9, Vsys=0., 
+                vel=None, datafile=None, outfile=None):
 
 
     # constants
@@ -19,11 +22,13 @@ def cube_parser(inc=45., PA=90., mstar=1.0, dist=150.,
     CC = 2.99792e10
 
     # generate an emission model
-    disk = simple_disk(inc=inc, PA=PA, mstar=mstar, dist=dist, 
-                       Tb0=Tb0, Tbq=Tbq, Tbmax=Tbmax, Tbmax_b=Tbmax_b,
-                       tau0=tau0, tauq=tauq, taueta=taueta, r_l=r_l,
-                       z0=z0, psi=psi, zphi=zphi, dVmax=dVmax,
-                       FOV=FOV, Npix=Npix, r_max=r_max)
+    disk = simple_disk(inc, PA, x0=x0, y0=y0, dist=dist, mstar=mstar, 
+                       r_min=r_min, r_max=r_max, r0=r0, r_l=r_l,
+                       z0=z0, zpsi=zpsi, zphi=zphi, Tb0=Tb0, Tbq=Tbq, 
+                       Tbeps=Tbeps, Tbmax=Tbmax, Tbmax_b=Tbmax_b,
+                       tau0=tau0, tauq=tauq, taueta=taueta, taumax=taumax,
+                       dV0=dV0, dVq=dVq, dVmax=dVmax, xi_nt=xi_nt,
+                       FOV=FOV, Npix=Npix, mu_l=mu_l)
 
 
     # decide on velocities
@@ -46,7 +51,7 @@ def cube_parser(inc=45., PA=90., mstar=1.0, dist=150.,
 
 
     # adjust for systemic velocity
-    vlsr = vel - (vsys * 1000.)
+    vlsr = vel - (Vsys * 1000.)
 
 
     # generate channel maps
@@ -110,17 +115,17 @@ def cube_parser(inc=45., PA=90., mstar=1.0, dist=150.,
         # spatial coordinates
         npix_ra = disk.Npix
         mid_pix_ra = 0.5 * disk.Npix + 0.5
-        delt_ra = -disk.cell_sky / 3600.
+        delt_ra = -disk.cell_sky / 3600
         if (delt_ra < 0):
             mod_data = np.fliplr(mod_data)
-        mod_ra = (np.arange(npix_ra) - (mid_pix_ra-0.5))*np.abs(delt_ra)*3600.
+        mod_ra = (np.arange(npix_ra) - (mid_pix_ra-0.5))*np.abs(delt_ra)*3600
         
         npix_dec = disk.Npix
         mid_pix_dec = 0.5 * disk.Npix + 0.5
-        delt_dec = disk.cell_sky / 3600.
+        delt_dec = disk.cell_sky / 3600
         if (delt_dec < 0):
             mod_data = np.flipud(mod_data)
-        mod_dec = (np.arange(npix_dec)-(mid_pix_dec-0.5))*np.abs(delt_dec)*3600.
+        mod_dec = (np.arange(npix_dec)-(mid_pix_dec-0.5))*np.abs(delt_dec)*3600
 
         # spectral coordinates
         try:
