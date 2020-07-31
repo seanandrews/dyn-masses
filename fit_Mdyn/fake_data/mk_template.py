@@ -5,7 +5,7 @@ from cube_parser import cube_parser
 
 # Specify template parameters
 startv = -10.           # starting velocity (LSRK), wrt Vsys, in [km/s]
-ch_spacing = 0.1        # velocity channel spacing in [km/s]
+ch_spacing = 0.2        # velocity channel spacing in [km/s]
 nchan = None            # (optional): number of channels; if None, will make 
                         # the cube symmetric around Vsys
 restfreq = 230.538e9    # rest frequency of line in [GHz]
@@ -14,7 +14,7 @@ RA = 240.               # phase center RA in [degrees]
 DEC = -40.              # phase center DEC in [degrees]
 config = '5'            # ALMA configuration
 total_time = '15min'    # total on-source time for simulation
-integ = '6s'            # integration time interval for simulation
+integ = '30s'           # integration time interval for simulation
 
 
 

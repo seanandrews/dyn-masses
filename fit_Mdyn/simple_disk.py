@@ -726,7 +726,11 @@ class simple_disk:
         Calculate the average tau profile assuming a single Gaussian component.
         """
         tau, dV, v0 = self.tau, self.dV_f, self.v0_f + dv0
-        return tau * np.exp(-((velax - v0) / dV)**2)
+        optdepth = np.empty_like(tau)
+        ok = (tau > 0.)
+        optdepth[~ok] = 0.
+        optdepth[ok] = tau[ok] * np.exp(-((velax - v0[ok]) / dV[ok])**2) 
+        return optdepth
 
     def _calc_flux(self, velax, dv0=0.0, side='f'):
         """
@@ -739,7 +743,11 @@ class simple_disk:
         else:
             quote = "Unknown 'side' value {}. Must be 'f' or 'r'."
             raise ValueError(quote.format(side))
-        return Tb * np.exp(-((velax - v0) / dV)**2)
+        spec = np.empty_like(Tb)
+        ok = (Tb > 0.)
+        spec[~ok] = 0.
+        spec[ok] = Tb[ok] * np.exp(-((velax - v0[ok]) / dV[ok])**2)
+        return spec
 
     def _calc_frac(self, velax, dv0=0.0):
         """
