@@ -7,11 +7,11 @@ sys.path.append('../')
 from cube_parser import cube_parser
 
 # template file
-temp_uv  = 'template_ch100ms_V0-10kms_nchan201_config5_dt15min_tinteg30s'
+temp_uv  = 'template_ch200ms_V0-10kms_nchan101_config5_dt15min_tinteg30s'
 template = 'template_uvfits/'+temp_uv+'.uvfits'
 
 # output files
-fout = 'simp3_std_highv_medr'
+fout = 'simp3_std_medv_medr'
 
 
 
@@ -19,7 +19,7 @@ fout = 'simp3_std_highv_medr'
 RMS = 9.4	# in mJy
 
 # inc, PA, mstar, r_l, z0, zpsi, Tb0, Tbq, Tbmax_b, xi_nt, vsys, dx, dy]
-theta = [40., 130., 0.7, 200., 2.3, 1.0, 205., -0.5, 20., 0.05, 0., 0., 0.]
+theta = [40., 130., 0.7, 200., 2.3, 1.0, 205., 0.5, 20., 0.05, 0., 0., 0.]
 FOV = 8.0
 dist = 150.
 Npix = 256

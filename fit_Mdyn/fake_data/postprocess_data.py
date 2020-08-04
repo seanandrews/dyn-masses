@@ -4,19 +4,19 @@ execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 
 # simulation
-fname = 'simp3_std_highv_medr_noiseless'
+fname = 'simp3_std_medv_medr_noiseless'
 
 # postprocessing steps and parameters
 do_tavg = False
 do_regrid = False
 do_shift = False
-do_image = False
+do_image = True
 
 # time-averaging
 out_tint = '30s'
 
 # regridding, shifting, imaging
-chanstart, chanwidth, nchan = '-3.5km/s', '0.2km/s', 35
+chanstart, chanwidth, nchan = '-10km/s', '0.2km/s', 101
 
 # imaging
 robust = 2.0
@@ -26,7 +26,7 @@ imsize = 512
 cell = '0.02arcsec'
 
 # mask parameters
-inc, PA, mstar, dist, zr, vlsr = 40., 310., 0.7, 150., 0.23, 0.
+inc, PA, mstar, dist, zr, Vsys = 40., 310., 0.7, 150., 0.23, 0.
 rmax, nbeams = 1.35, 1.3
 
 
@@ -122,5 +122,5 @@ if do_image:
            nterms=1, restoringbeam='common')
 
     # export to a FITS cube
-    exportfits('sim_images/im_'+fname, 'sim_images/im_'+fname+'.fits', 
-               overwrite=True)
+    exportfits('sim_images/im_'+fname+'.image', 
+               'sim_images/im_'+fname+'.image.fits', overwrite=True)
