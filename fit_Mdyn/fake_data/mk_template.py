@@ -4,8 +4,8 @@ sys.path.append('../')
 from cube_parser import cube_parser
 
 # Specify template parameters
-startv = -10.           # starting velocity (LSRK), wrt Vsys, in [km/s]
-ch_spacing = 0.2        # velocity channel spacing in [km/s]
+startv = -9.699         # starting velocity (LSRK), wrt Vsys, in [km/s]
+ch_spacing = 0.0159     # velocity channel spacing in [km/s]
 nchan = None            # (optional): number of channels; if None, will make 
                         # the cube symmetric around Vsys
 restfreq = 230.538e9    # rest frequency of line in [GHz]
@@ -23,10 +23,11 @@ if nchan is None:
     nchan = np.int(2 * np.abs(startv) / ch_spacing + 1)
 vel = (startv + ch_spacing * np.arange(nchan)) * 1000
 
+
 # Set a filename that describes the template
 outfile = 'template_ch' + str(np.int(1000*ch_spacing)) + \
-          'ms_V0' + str(int(startv)) + \
-          'kms_nchan' + str(nchan) + '_config' + config + '_dt' + \
+          'ms_V0' + str(int(1000*startv)) + \
+          'ms_nchan' + str(nchan) + '_config' + config + '_dt' + \
           total_time + '_tinteg' + integ
 
 # compute a dummy model cube in a FITS file

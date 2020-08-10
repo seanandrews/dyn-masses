@@ -7,16 +7,16 @@ sys.path.append('../')
 from cube_parser import cube_parser
 
 # template file
-temp_uv  = 'template_ch200ms_V0-10kms_nchan101_config5_dt15min_tinteg30s'
+temp_uv  = 'template_ch15ms_V0-9699ms_nchan1221_config5_dt15min_tinteg30s'
 template = 'template_uvfits/'+temp_uv+'.uvfits'
 
 # output files
-fout = 'simp3_std_medv_medr'
+fout = 'simp3_std_medv_medr_10xHIGHV'
 
 
 
 # RMS noise per naturally weighted beam per channel in output
-RMS = 9.4	# in mJy
+RMS = 7.4	# in mJy
 
 # inc, PA, mstar, r_l, z0, zpsi, Tb0, Tbq, Tbmax_b, xi_nt, vsys, dx, dy]
 theta = [40., 130., 0.7, 200., 2.3, 1.0, 205., 0.5, 20., 0.05, 0., 0., 0.]
