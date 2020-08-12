@@ -47,7 +47,9 @@ Thumbs.db
 # Folders #
 data/
 preMS_models/
-
+*/__pycache__/
 
 *.pdf
 *.fits
+
+

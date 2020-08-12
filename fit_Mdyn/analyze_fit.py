@@ -6,14 +6,14 @@ import os
 import sys
 
 # emcee backend file
-fname = 'simp3_std_medv_medr_STARTHIV_noiseless.hann.rebin'
+fname = 'simp3_std_medv_medr_STARTVSHIFT_noiseless.hann.shift'
 
 
 # load the backend
 reader = emcee.backends.HDFBackend('posteriors/'+fname+'.h5')
 
 # set burn-in
-burnin = 1000
+burnin = 2000
 
 # set parameter labels, truths
 lbls = ['i', 'PA', 'M', 'Tb0', 'Tbq', 'r_l', 'z0', 'Tback', 'vsys', 'dx', 'dy']
