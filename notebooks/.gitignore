@@ -45,8 +45,9 @@ Thumbs.db
 .ipynb_checkpoints
 
 # Folders #
-*/data
-*/preMS_models
+data/
+preMS_models/
 
 
 *.pdf
+*.fits
