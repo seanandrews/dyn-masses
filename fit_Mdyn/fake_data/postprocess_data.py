@@ -1,4 +1,4 @@
-import os
+import os, sys
 import numpy as np
 execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
@@ -10,7 +10,8 @@ fname = 'simp3_std_medv_medr_10xHIGHV_hann_noiseless'
 do_tavg = False
 do_regrid = False
 do_shift = True
-do_image = False
+do_bin = True
+do_image = True
 
 # time-averaging
 out_tint = '30s'
@@ -90,6 +91,28 @@ if do_shift:
     exportuvfits(vis='sim_MS/'+fname+'.ms',
                  fitsfile='sim_uvfits/'+fname+'.uvfits', datacolumn='data',
                  overwrite=True)
+
+
+# binning
+if do_bin:
+    # do the binning (2x)
+    fname_new = fname+'.2xbin'
+    os.system('rm -rf sim_MS/'+fname_new+'.ms')
+    split(vis='sim_MS/'+fname+'.ms', outputvis='sim_MS/'+fname_new+'.ms',
+          datacolumn='data', width=2)
+
+    # export the binned file
+    fname = fname_new
+    exportuvfits(vis='sim_MS/'+fname+'.ms',
+                 fitsfile='sim_uvfits/'+fname+'.uvfits', datacolumn='data',
+                 overwrite=True)
+
+    # change velocities setup for imaging
+    chanstart = str(np.float(chanstart[:-4]) + \
+                    0.5 * np.float(chanwidth[:-4])) + 'km/s'
+    chanwidth = str(2 * np.float(chanwidth[:-4])) + 'km/s'
+    nchan = np.int(nchan / 2)
+    print(chanstart, chanwidth, nchan)
 
 
 # imaging? 
