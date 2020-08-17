@@ -20,7 +20,7 @@ datafile = 'simp3_std_medv_medr_10xHIGHV_hann_noiseless'
 # spectral signal processing
 chbin = 2               # number of channels to average over
 chpad = 3               # number of channels to pad for SRF convolution
-vlo, vhi = -5.5, 5.5    # low and high LSRK velocities to process, in [km/s]
+vlo, vhi = -4.5, 4.5    # low and high LSRK velocities to process, in [km/s]
 
 
 
@@ -75,24 +75,15 @@ nch = len(vlsrk)
 
 # PRECALCULATE PARTIAL COVARIANCE MATRIX
 # --------------------------------------
-
 # for case of ~similar weights and 2x binning
 Mx2 = np.eye(nch) + 0.3 * np.eye(nch, k=-1) + 0.3 * np.eye(nch, k=1)
 Mx2_inv = np.linalg.inv(Mx2)
 
 
-
-# fixed parameters
-FOV = 8.0
-dist = 150.
-Npix = 256
-Tbmax = 500.
-r0 = 10.
-mu_l = 28.
-window_model = True
-bin_model = True
-fixed = FOV, dist, Npix, Tbmax, r0, mu_l, restfreq
-
+# INITIALIZE
+# ----------
+# fixed model parameters
+FOV, dist, Npix, Tbmax, r0, mu_l = 8.0, 150., 256, 500., 10., 28.
 
 # initialize walkers
 p_lo = np.array([30, 120, 0.5, 100, 0, 0.5, 155, 0.2,  5, 0, -0.1, -0.1, -0.1])
@@ -112,9 +103,9 @@ tvis, gcf, corr = vis_sample(imagefile=foo, uu=dvis_native.uu,
                              vv=dvis_native.vv, return_gcf=True, 
                              return_corr_cache=True, mod_interp=False)
 
-
+# object for passing information as global variable to posterior function
 class passer:
-    def __init__(self, dist, FOV, Tbmax, vels, Npix, mu_l, nu0, gcf, corr, 
+    def __init__(self, dist, FOV, Tbmax, vels, Npix, mu_l, r0, nu0, gcf, corr, 
                  native_wgts, chpad, chbin, data_vis, data_wgts, M_inv):
         self.dist = dist
         self.FOV = FOV
@@ -122,6 +113,7 @@ class passer:
         self.vels = vels
         self.Npix = Npix
         self.mu_l = mu_l
+        self.r0 = r0
         self.nu0 = nu0
         self.gcf = gcf
         self.corr = corr
@@ -133,24 +125,13 @@ class passer:
         self.M_inv = M_inv
 
 global dd
-dd = passer(dist, FOV, Tbmax, vlsrk_native, Npix, mu_l, restfreq, gcf, corr,
-            dvis_native.wgts, chpad, chbin, dvis.VV, (16./5.)*dvis.wgts, 
+dd = passer(dist, FOV, Tbmax, vlsrk_native, Npix, mu_l, r0, restfreq, gcf, 
+            corr, dvis_native.wgts, chpad, chbin, dvis.VV, (16./5.)*dvis.wgts, 
             Mx2_inv)
      
 
-# package data and supplementary information
-#global dpassit
-#if bin_model:
-#    dpassit = dvis, dvis_native, gcf, corr, fixed
-#else:
-#    dpassit = dvis, 0, gcf, corr, fixed
-
 # posterior sample function
 def lnprob_globdata(theta):
-
-    # parse input arguments
-#    dvis, dvis_native, gcf, corr, fixed = dpassit
-#    FOV, dist, Npix, Tbmax, r0, mu_l, restfreq = fixed
 
     ### - PRIORS
     ptheta = np.empty_like(theta)
@@ -171,7 +152,7 @@ def lnprob_globdata(theta):
     else: return -np.inf
 
     # r_l: p(r_l) = uniform(0, dist * FOV / 2)          
-    if ((theta[3] > r0) and (theta[3] < (dd.dist * dd.FOV / 2))):
+    if ((theta[3] > dd.r0) and (theta[3] < (dd.dist * dd.FOV / 2))):
         ptheta[3] = 0.
     else: return -np.inf
 
@@ -220,11 +201,8 @@ def lnprob_globdata(theta):
         ptheta[12] = 0.	#-0.5 * (theta[10] - 0.0)**2 / 0.08**2
     else: return -np.inf
     
-    # convert to velocities
-    #vel = c_ * (1. - dvis_native.freqs / restfreq)
-
     # generate a model cube
-    model = cube_parser(inc=theta[0], PA=theta[1], dist=dd.dist, 
+    model = cube_parser(inc=theta[0], PA=theta[1], dist=dd.dist, r0=dd.r0,
                         mstar=theta[2], r_l=theta[3], z0=theta[4], 
                         zpsi=theta[5], Tb0=theta[6], Tbq=theta[7], 
                         Tbmax=dd.Tbmax, Tbmax_b=theta[8], xi_nt=theta[9], 
@@ -256,60 +234,23 @@ def lnprob_globdata(theta):
                                                    modl_wgt.shape[1])), axis=1)
 
     # compute the log-likelihood
-    #logL = -0.5 * np.sum(dvis.wgts * np.absolute(dvis.VV - modl_vis)**2)
     resid = np.absolute(dd.data_vis - modl_vis)
     logL = -0.5 * np.sum(resid * np.dot(dd.M_inv, dd.data_wgts * resid))
 
     # return the posterior
     return logL + np.sum(ptheta)
 
+
+
 # set up and HDF5 backend
-#filename = 'posteriors/'+datafile+suff+'.h5'
-filename = 'posteriors/dummy.h5'
+filename = 'posteriors/'+datafile+'_updated.h5'
 os.system('rm -rf '+filename)
 backend = emcee.backends.HDFBackend(filename)
 backend.reset(nwalk, ndim)
 
-
-
-max_steps = 10
-sampler = emcee.EnsembleSampler(nwalk, ndim, lnprob_globdata)
-t0 = time.time()
-sampler.run_mcmc(p0, max_steps)
-print('serial')
-print(time.time()-t0)
-
-
-# parallel
+# run the sampler
+max_steps = 10000
 with Pool() as pool:
-    sampler = emcee.EnsembleSampler(nwalk, ndim, lnprob_globdata, pool=pool)
-    t0 = time.time()
-    sampler.run_mcmc(p0, max_steps)
-    print('parallel')
-    print(time.time()-t0)
-
-    # set up sampler
-#    sampler = emcee.EnsembleSampler(nwalk, ndim, lnprob_globdata, pool=pool,
-#                                    backend=backend)
-
-    # track autocorrelation time
-#    index = 0
-#    autocorr = np.empty(max_steps)
-#    old_tau = np.inf
-
-    # sample for up to max_steps trials
-#    for sample in sampler.sample(p0, iterations=max_steps, progress=True):
-#        if sampler.iteration % 100:
-#            continue
-        
-        # compute the autocorrelation time 
-#        tau = sampler.get_autocorr_time(tol=0)
-#        autocorr[index] = np.mean(tau)
-#        index += 1
-
-        # check convergence
-#        converged = np.all(tau * 100 < sampler.iteration)
-#        converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-#        if converged:
-#            break
-#        old_tau = tau
+    sampler = emcee.EnsembleSampler(nwalk, ndim, lnprob_globdata, pool=pool,
+                                    backend=backend)
+    sampler.run_mcmc(p0, max_steps, progress=True)
