@@ -15,12 +15,12 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # --------------
 # locate data
 datadir  = 'fake_data/sim_uvfits/'
-datafile = 'simp3_std_medv_medr_10xHIGHV_hann_noiseless'
+datafile = 'full_magic'
 
 # spectral signal processing
 chbin = 2               # number of channels to average over
 chpad = 3               # number of channels to pad for SRF convolution
-vlo, vhi = -4.5, 4.5    # low and high LSRK velocities to process, in [km/s]
+vlo, vhi = -7.5, 7.5    # low and high LSRK velocities to process, in [km/s]
 
 
 
@@ -182,8 +182,8 @@ def lnprob_globdata(theta):
     else: return -np.inf
 
     # xi_nt: p(xi_nt) = uniform(0, 0.2)
-    if ((theta[9] >= 0.0) and (theta[9] <= 0.2)):
-        ptheta[9] = 0.
+    if ((theta[9] >= 0.0) and (theta[9] <= 0.5)):
+        ptheta[9] = -0.5 * (theta[9] - 0.05)**2 / 0.001**2
     else: return -np.inf
 
     # V_sys: p(V_sys) = normal(0.0, 0.1)	# adjusted for each case
@@ -243,7 +243,7 @@ def lnprob_globdata(theta):
 
 
 # set up and HDF5 backend
-filename = 'posteriors/'+datafile+'_updated.h5'
+filename = 'posteriors/'+datafile+'.h5'
 os.system('rm -rf '+filename)
 backend = emcee.backends.HDFBackend(filename)
 backend.reset(nwalk, ndim)

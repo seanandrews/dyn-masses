@@ -4,13 +4,13 @@ execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 
 # simulation
-fname = 'simp3_std_medv_medr_10xHIGHV_hann_noiseless'
+fname = 'full_magic'
 
 # postprocessing steps and parameters
 do_tavg = False
 do_regrid = False
-do_shift = True
-do_bin = True
+do_shift = False
+do_bin = False
 do_image = True
 
 # time-averaging
@@ -18,7 +18,7 @@ out_tint = '30s'
 
 # regridding, shifting, imaging
 chanstart, chanwidth, nchan = '-9.699km/s', '0.159km/s', 123
-chanstart, chanwidth, nchan = '-9.62km/s', '0.159km/s', 123
+#chanstart, chanwidth, nchan = '-9.62km/s', '0.159km/s', 123
 
 # imaging
 robust = 2.0
