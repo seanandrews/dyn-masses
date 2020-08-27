@@ -6,14 +6,14 @@ import os
 import sys
 
 # emcee backend file
-fname = 'full_magic'
+fname = 'simp3_std_medr_medv_noiseless'
 
 
 # load the backend
 reader = emcee.backends.HDFBackend('posteriors/'+fname+'.h5')
 
 # set burn-in
-burnin = 700
+burnin = 00
 
 # set parameter labels, truths
 lbls = ['i', 'PA', 'M', 'r_l', 'z0', 'zpsi', 'Tb0', 'Tbq', 'Tback', 'xi_turb', 'vsys', 'dx', 'dy']

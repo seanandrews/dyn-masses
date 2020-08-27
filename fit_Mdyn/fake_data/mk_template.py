@@ -28,13 +28,14 @@ tname = 'std_medr_medv'    # base filename: append str(spec_oversample)+'x' if
 ch_spacing = 122.          # frequency channel spacing in [kHz]
 restfreq = 230.538e9       # rest frequency of line in [Hz]
 Vsys = 0.0                 # systemic velocity (LSRK) in [km/s]
-Vspan = 10.                # velocity half-span (Vsys +/- ~Vspan) in [km/s]
+Vspan = 15.                # velocity half-span (Vsys +/- ~Vspan) in [km/s]
 spec_oversample = 10       # how many channels per ch_spacing desired?
 
 # target coordinates
-RA = 240.                  # phase center RA in [degrees]
-DEC = -40.                 # phase center DEC in [degrees]
+RA = '16:00:00.00'         # phase center RA 
+DEC = '-40:00:00.00'       # phase center DEC
 HA = '0.0h'                # hour angle at start of observations
+date = '2021/05/21'        # date string
 
 # observing parameters
 config = '5'               # ALMA configuration
@@ -56,12 +57,19 @@ freq = nu_sys - nu_span - (ch_spacing*1e3 / spec_oversample) * np.arange(nchan)
 vel = c_ * (1. - freq / restfreq)
 
 
+### Parse the target coordinates into degrees
+RA_pieces = [np.float(RA.split(':')[i]) for i in np.arange(3)]
+RAdeg = 15 * np.sum(np.array(RA_pieces) / [1., 60., 3600.])
+DEC_pieces = [np.float(DEC.split(':')[i]) for i in np.arange(3)]
+DECdeg = np.sum(np.array(DEC_pieces) / [1., 60., 3600.])
+
+
 ### Make a dummy template FITS cube for CASA simulations
 if spec_oversample > 1:
     outfile = tname+str(spec_oversample)+'x'
 else: outfile = tname
 cube_parser(dist=150., r_max=300., r_l = 300., FOV=8.0, Npix=256, 
-            restfreq=restfreq, RA=RA, DEC=DEC, Vsys=Vsys, vel=vel*1e3, 
+            restfreq=restfreq, RA=RAdeg, DEC=DECdeg, Vsys=Vsys, vel=vel*1e3, 
             outfile='template_cubes/'+outfile+'.fits')
 
 
@@ -69,9 +77,13 @@ cube_parser(dist=150., r_max=300., r_l = 300., FOV=8.0, Npix=256,
 f = open('template_params/'+outfile+'.params.txt', 'w')
 f.write(outfile+'\n' + str(ch_spacing)+'\n' + str(restfreq)+'\n')
 f.write(str(Vsys)+'\n' + str(Vspan)+'\n' + str(spec_oversample)+'\n')
-f.write(str(RA)+'\n' + HA+'\n' + config+'\n' + total_time+'\n' + integ)
+f.write(RA+'\n' + DEC+'\n' + date+'\n' + HA+'\n')
+f.write(config+'\n' + total_time+'\n' + integ)
 f.close()
 
 
 ### Run simulation script in CASA
+f = open('run_template.txt', 'w')
+f.write(outfile)
+f.close()
 os.system('casa --nologger --nologfile -c mock_obs_alma.py')

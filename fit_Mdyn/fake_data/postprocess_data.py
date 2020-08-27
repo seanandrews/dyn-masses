@@ -4,7 +4,7 @@ execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 
 # simulation
-fname = 'full_magic'
+fname = 'simp3_std_medr_medv_noiseless'
 
 # postprocessing steps and parameters
 do_tavg = False
