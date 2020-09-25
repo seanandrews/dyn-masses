@@ -5,6 +5,7 @@ from scipy.interpolate import interp1d
 from scipy.ndimage import convolve1d
 from vis_sample import vis_sample
 from vis_sample.file_handling import import_data_uvfits
+import matplotlib.pyplot as plt
 sys.path.append('../')
 from cube_parser import cube_parser
 
@@ -14,14 +15,14 @@ Decription of what this code does.
 """
 
 # desired output channels
-chanstart_out = -9.699	# km/s
-chanwidth_out = 0.159	# km/s
-nchan_out = 123
+#chanstart_out = -9.6	# km/s
+#chanwidth_out = 0.08	# km/s
+#nchan_out = 241
 
 
 # bookkeeping
 template_file = 'std_medr_medv10x'
-outdata_file  = 'simp3_std_medr_medv'
+outdata_file  = 'simp3_std_medr_medv_test'
 
 fetch_freqs = True
 
@@ -29,6 +30,7 @@ fetch_freqs = True
 
 # RMS noise per naturally weighted beam per channel in output
 RMS = 7.4	# in mJy
+#RMS = 10.5	# in mJy
 
 
 # Constants
@@ -65,6 +67,16 @@ freq_TOPO = datf['freq_TOPO']
 freq_LSRK = datf['freq_LSRK']
 v_LSRK = c_ * (1. - freq_LSRK / restfreq)
 
+# midpt velocities
+freq_LSRK_t = datf['freq_LSRK'][:,::10].copy()
+v_LSRK_t = c_ * (1. - freq_LSRK_t / restfreq)
+midstamp = np.int(v_LSRK_t.shape[0] / 2)
+freq_LSRK_mid, v_LSRK_mid = freq_LSRK_t[midstamp,:], v_LSRK_t[midstamp,:]
+
+chanstart_out = v_LSRK_mid[33]
+chanwidth_out = np.mean(np.diff(v_LSRK_mid))
+nchan_out = 123
+
 
 ### Compute mock visibilities in TOPO frame
 # clone the template
@@ -73,7 +85,6 @@ clone = fits.open('template_uvfits/'+template_file+'.uvfits')
 # configure clone inputs
 tvis = import_data_uvfits('template_uvfits/'+template_file+'.uvfits')
 tvis.rfreq = np.mean(freq_TOPO)
-clone_data = clone[0].data
 nvis, nchan = tvis.VV.shape[1], tvis.VV.shape[0]
 darr = np.zeros([nvis, nchan, 2, 3])
 
@@ -82,7 +93,7 @@ nperstamp = np.int(nvis / t_integ)
 
 # cycle through each timestamp; calculate visibilities for that set of LSRK
 # frequencies; populate the appropriate part of the mock dataset
-print('Compute visibilities in TOPO frame...')
+print('Computing visibilities in TOPO frame...')
 for i in range(v_LSRK.shape[0]):
     # tracker
     print('timestamp '+str(i)+' / '+str(v_LSRK.shape[0]))
@@ -110,9 +121,11 @@ darr[:,:,0,2], darr[:,:,1,2] = tvis.wgts, tvis.wgts
 
 # output the clone into a UVFITS file (pre-SRF, pre-noise injection), which
 # contains the appropriate LSRK data packed into the TOPO frame
-clone_data['data'] = np.expand_dims(np.expand_dims(np.expand_dims(darr,1),1),1)
+cldata = np.expand_dims(np.expand_dims(np.expand_dims(darr,1),1),1)
+clone[0].data['data'] = cldata
 clone.writeto('sim_uvfits/'+outdata_file+'.TOPO.noiseless.pre-SRF.uvfits',
               overwrite=True)
+clone.close()
 print('...finished calculation of TOPO frame visibilities.')
 
 
@@ -121,6 +134,7 @@ print('...finished calculation of TOPO frame visibilities.')
 dat = fits.open('sim_uvfits/'+outdata_file+'.TOPO.noiseless.pre-SRF.uvfits')
 hdr = dat[0].header
 vis = np.squeeze(dat[0].data['data'])
+dat.close()
 
 # Assign channel indices
 chan = np.arange(len(freq_TOPO)) / spec_oversampling
@@ -151,10 +165,12 @@ f.close()
 os.system('casa --nologger --nologfile -c make_dummy.py')
 
 # Extract the output frequencies and velocities
-dhdr = fits.open('dummy.uvfits')[0].header
+dat = fits.open('dummy.uvfits')
+dhdr = dat[0].header
 nu0, ix0, dnu = dhdr['CRVAL4'], dhdr['CRPIX4'], dhdr['CDELT4'],
 freq_out = nu0 + (np.arange(nchan_out) - ix0 + 1) * dnu
 v_out = c_ * (1 - freq_out / restfreq)
+dat.close()
 
 
 ### Interpolate into desired output frequency grid (in LSRK channels)
@@ -190,7 +206,7 @@ outf[:,:,0,2] = 0.5 * np.ones_like(vis_interp.real)
 outf[:,:,1,2] = 0.5 * np.ones_like(vis_interp.real)
 
 # Noisy output visibilities
-sig_noise = 1e3 * RMS * np.sqrt(vis_out.shape[0])
+sig_noise = 1e-3 * RMS * np.sqrt(vis_out.shape[0])
 noiseXX = np.random.normal(0, sig_noise, (vis_out.shape[0], nchan_out)) + \
           np.random.normal(0, sig_noise, (vis_out.shape[0], nchan_out))*1j
 noiseYY = np.random.normal(0, sig_noise, (vis_out.shape[0], nchan_out)) + \
@@ -205,15 +221,16 @@ outn[:,:,1,2] = 0.5 * np.ones_like(vis_interp.real) / sig_noise**2
 
 ### Output
 clonef = fits.open('dummy.uvfits')
-cfdata = clonef[0].data
 cfdata = np.expand_dims(np.expand_dims(np.expand_dims(outf, 1), 1), 1)
+clonef[0].data['data'] = cfdata
 clonef.writeto('sim_uvfits/'+outdata_file+'_noiseless.uvfits', overwrite=True)
+clonef.close()
 
 clonen = fits.open('dummy.uvfits')
-cndata = clonen[0].data
 cndata = np.expand_dims(np.expand_dims(np.expand_dims(outn, 1), 1), 1)
+clonen[0].data['data'] = cndata
 clonen.writeto('sim_uvfits/'+outdata_file+'_noisy.uvfits', overwrite=True)
-
+clonen.close()
 
 ### Cleanup
 os.system('rm -rf dummy.uvfits')

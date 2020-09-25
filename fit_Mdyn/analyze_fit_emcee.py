@@ -6,14 +6,14 @@ import os
 import sys
 
 # emcee backend file
-fname = 'simp3_std_medr_medv_noiseless'
+fname = 'simp3_std_medr_medv_test_noiseless'
 
 
 # load the backend
 reader = emcee.backends.HDFBackend('posteriors/'+fname+'.h5')
 
 # set burn-in
-burnin = 00
+burnin = 2000
 
 # set parameter labels, truths
 lbls = ['i', 'PA', 'M', 'r_l', 'z0', 'zpsi', 'Tb0', 'Tbq', 'Tback', 'xi_turb', 'vsys', 'dx', 'dy']
@@ -22,6 +22,9 @@ theta = [40., 130., 0.7, 200., 2.3, 1.0, 205., 0.5, 20., 0.05, 0., 0., 0.]
 # parse the samples
 all_samples = reader.get_chain(discard=0, flat=False)
 samples = reader.get_chain(discard=burnin, flat=False)
+remove_it = np.where(np.mean(samples[:,:,0], axis=0) < 35.)[0]
+all_samples = np.delete(all_samples, remove_it, axis=1)
+samples = np.delete(samples, remove_it, axis=1)
 nsteps, nwalk, ndim = samples.shape[0], samples.shape[1],  samples.shape[2]
 
 

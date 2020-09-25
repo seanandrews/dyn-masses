@@ -15,7 +15,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 # --------------
 # locate data
 datadir  = 'fake_data/sim_uvfits/'
-datafile = 'simp3_std_medr_medv_noiseless'
+datafile = 'simp3_std_medr_highv_noiseless'
 
 # spectral signal processing
 chbin = 2               # number of channels to average over
