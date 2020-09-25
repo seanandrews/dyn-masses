@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 # USER INTERFACE
 # --------------
 # locate data
-datadir  = ''
+datadir  = 'fake_data/sim_uvfits/'
 datafile = 'simp3_std_medr_medv_noiseless'
 
 # spectral signal processing
@@ -113,7 +113,7 @@ dd = passer(dist, FOV, Tbmax, vlsrk_native, Npix, mu_l, r0, restfreq, 0,
 
 # load information about frequencies of template model (this is solely to 
 # identify the frequency grid we want to compute the model on)
-df = np.load('std_medr_medv10x.freq_conversions.npz')
+df = np.load('fake_data/template_params/std_medr_medv10x.freq_conversions.npz')
 freq_TOPO = df['freq_TOPO']
 freq_LSRK = df['freq_LSRK']
 freq_TOPO = freq_TOPO[::10].copy()
