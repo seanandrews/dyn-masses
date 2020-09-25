@@ -6,14 +6,22 @@ import os
 import sys
 
 # emcee backend file
+<<<<<<< HEAD
 fname = 'simp3_std_medv_medr_10xHIGHV_hann_noiseless.shift_windowed'
+=======
+fname = 'simp3_std_medr_medv_test_noiseless'
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 
 
 # load the backend
 reader = emcee.backends.HDFBackend('posteriors/'+fname+'.h5')
 
 # set burn-in
+<<<<<<< HEAD
 burnin = 000
+=======
+burnin = 2000
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 
 # set parameter labels, truths
 lbls = ['i', 'PA', 'M', 'r_l', 'z0', 'zpsi', 'Tb0', 'Tbq', 'Tback', 'xi_turb', 'vsys', 'dx', 'dy']
@@ -22,6 +30,12 @@ theta = [40., 130., 0.7, 200., 2.3, 1.0, 205., 0.5, 20., 0.05, 0., 0., 0.]
 # parse the samples
 all_samples = reader.get_chain(discard=0, flat=False)
 samples = reader.get_chain(discard=burnin, flat=False)
+<<<<<<< HEAD
+=======
+remove_it = np.where(np.mean(samples[:,:,0], axis=0) < 35.)[0]
+all_samples = np.delete(all_samples, remove_it, axis=1)
+samples = np.delete(samples, remove_it, axis=1)
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 nsteps, nwalk, ndim = samples.shape[0], samples.shape[1],  samples.shape[2]
 
 

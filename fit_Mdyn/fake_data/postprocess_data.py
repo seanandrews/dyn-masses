@@ -1,27 +1,50 @@
+<<<<<<< HEAD
 import os
+=======
+import os, sys
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 import numpy as np
 execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 
 # simulation
+<<<<<<< HEAD
 fname = 'simp3_std_medv_medr_10xHIGHV_hann_noiseless'
+=======
+fname = 'simp3_std_medr_highv_noiseless'
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 
 # postprocessing steps and parameters
 do_tavg = False
 do_regrid = False
+<<<<<<< HEAD
 do_shift = True
 do_image = False
+=======
+do_shift = False
+do_bin = False
+do_image = True
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 
 # time-averaging
 out_tint = '30s'
 
 # regridding, shifting, imaging
+<<<<<<< HEAD
 chanstart, chanwidth, nchan = '-9.699km/s', '0.159km/s', 123
 chanstart, chanwidth, nchan = '-9.62km/s', '0.159km/s', 123
 
 # imaging
 robust = 2.0
 thresh = '6.6mJy'
+=======
+#chanstart, chanwidth, nchan = '-9.699km/s', '0.159km/s', 123
+chanstart, chanwidth, nchan = '-9.6km/s', '0.08km/s', 241
+
+# imaging
+robust = 2.0
+thresh = '10.5mJy'
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 restfreq = 230.538e9
 imsize = 512
 cell = '0.02arcsec'
@@ -92,6 +115,31 @@ if do_shift:
                  overwrite=True)
 
 
+<<<<<<< HEAD
+=======
+# binning
+if do_bin:
+    # do the binning (2x)
+    fname_new = fname+'.2xbin'
+    os.system('rm -rf sim_MS/'+fname_new+'.ms')
+    split(vis='sim_MS/'+fname+'.ms', outputvis='sim_MS/'+fname_new+'.ms',
+          datacolumn='data', width=2)
+
+    # export the binned file
+    fname = fname_new
+    exportuvfits(vis='sim_MS/'+fname+'.ms',
+                 fitsfile='sim_uvfits/'+fname+'.uvfits', datacolumn='data',
+                 overwrite=True)
+
+    # change velocities setup for imaging
+    chanstart = str(np.float(chanstart[:-4]) + \
+                    0.5 * np.float(chanwidth[:-4])) + 'km/s'
+    chanwidth = str(2 * np.float(chanwidth[:-4])) + 'km/s'
+    nchan = np.int(nchan / 2)
+    print(chanstart, chanwidth, nchan)
+
+
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 # imaging? 
 if do_image:
     # make a dirty image to guide a Keplerian mask

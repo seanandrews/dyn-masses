@@ -1,9 +1,19 @@
 import os
 import numpy as np
 
+<<<<<<< HEAD
 # parse inputs
 io = np.loadtxt('template.pars.txt', dtype=str)
 cube, conf_str, dt_str, int_str = io[0], io[1], io[2], io[3]
+=======
+# read in which template to run
+which_temp = str(np.loadtxt('run_template.txt', dtype=str))
+
+# parse inputs
+io = np.loadtxt('template_params/'+which_temp+'.params.txt', dtype=str)
+cube, ra_str, dec_str, date_str, ha_str = io[0], io[6], io[7], io[8], io[9]
+conf_str, dt_str, int_str = io[10], io[11], io[12]
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 
 # configuration file
 cfg_dir = '/pool/asha0/casa-pipeline-release-5.6.1-8.el6/data/alma/simmos/'
@@ -14,13 +24,21 @@ os.chdir('template_sims/')
 default('simobserve')
 simobserve(project=cube+'.sim', skymodel='../template_cubes/'+cube+'.fits', 
            antennalist=cfg_str, totaltime=dt_str, integration=int_str, 
+<<<<<<< HEAD
            thermalnoise='', refdate='2021/05/01', mapsize='10arcsec')
+=======
+           thermalnoise='', refdate=date_str, hourangle=ha_str, 
+           mapsize='10arcsec')
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
 
 # make a template UVFITS file
 infile = cube+'.sim/'+cube+'.sim.alma.cycle7.'+conf_str+'.ms'
 exportuvfits(vis=infile, fitsfile='../template_uvfits/'+cube+'.uvfits',
              datacolumn='data', overwrite=True)
 os.chdir('../')
+<<<<<<< HEAD
 
 # notification
 print('Wrote a UVFITS file to \n    template_uvfits/'+cube+'.uvfits')
+=======
+>>>>>>> d4a9c5ff4c73602ea621599da853d2b0f119f646
