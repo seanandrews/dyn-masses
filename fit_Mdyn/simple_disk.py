@@ -755,7 +755,7 @@ class simple_disk:
         back side based on the optical depth.
         """
         tau = self._calc_tau(velax, dv0=dv0)
-        return 1.0 - np.exp(-tau), np.exp(-tau)
+        return 1.0, np.exp(-tau)
 
     @staticmethod
     def _convolve_cube(cube, beam):
