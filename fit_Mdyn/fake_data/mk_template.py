@@ -21,15 +21,15 @@ file for future reference (and subsequent use).
 ### Specify template parameters
 
 # bookkeeping
-tname = 'std_medr_highv'    # base filename: append str(spec_oversample)+'x' if
+tname = 'std_medr_medv'     # base filename: append str(spec_oversample)+'x' if
 			    # spec_oversample > 1
 
 # spectral settings
-ch_spacing = 61.           # frequency channel spacing in [kHz]
+ch_spacing = 122.          # frequency channel spacing in [kHz]
 restfreq = 230.538e9       # rest frequency of line in [Hz]
-Vsys = 0.0                 # systemic velocity (LSRK) in [km/s]
+Vsys = 4.0                 # systemic velocity (LSRK) in [km/s]
 Vspan = 15.                # velocity half-span (Vsys +/- ~Vspan) in [km/s]
-spec_oversample = 10       # how many channels per ch_spacing desired?
+spec_oversample = 5        # how many channels per ch_spacing desired?
 
 # target coordinates
 RA = '16:00:00.00'         # phase center RA 
@@ -39,14 +39,14 @@ date = '2021/05/21'        # date string
 
 # observing parameters
 config = '5'               # ALMA configuration
-total_time = '15min'       # total on-source time for simulation
+total_time = '25min'       # total on-source time for simulation
 integ = '30s'              # integration time interval for simulation
 
 
 #=============================================================================#
 
 ### Constants
-c_ = 2.9979e5              # speed of light in [km/s]
+c_ = 2.99792e5              # speed of light in [km/s]
 
 
 ### Set the channels in frequency and LSRK velocity domains

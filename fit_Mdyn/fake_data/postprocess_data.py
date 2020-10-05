@@ -4,7 +4,7 @@ execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 
 # simulation
-fname = 'simp3_std_medr_highv_noiseless'
+fname = 'simp3_std_medr_medv_noiseless'
 
 # postprocessing steps and parameters
 do_tavg = False
@@ -18,17 +18,17 @@ out_tint = '30s'
 
 # regridding, shifting, imaging
 #chanstart, chanwidth, nchan = '-9.699km/s', '0.159km/s', 123
-chanstart, chanwidth, nchan = '-9.6km/s', '0.08km/s', 241
+chanstart, chanwidth, nchan = '-5.6km/s', '0.16km/s', 121
 
 # imaging
 robust = 2.0
-thresh = '10.5mJy'
+thresh = '7.4mJy'
 restfreq = 230.538e9
 imsize = 512
 cell = '0.02arcsec'
 
 # mask parameters
-inc, PA, mstar, dist, zr, Vsys = 40., 310., 0.7, 150., 0.23, 0.
+inc, PA, mstar, dist, zr, Vsys = 40., 310., 0.7, 150., 0.23, 4.
 rmax, nbeams = 1.35, 1.3
 
 
