@@ -28,3 +28,5 @@ exportuvfits(vis='dummy.ms', fitsfile='dummy.uvfits', datacolumn='data',
 
 # clean up
 os.system('rm -rf dummy*.ms')
+os.system('rm -rf dummy.txt')
+os.system('rm *.last')

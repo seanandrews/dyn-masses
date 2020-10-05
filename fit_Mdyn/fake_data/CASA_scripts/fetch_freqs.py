@@ -50,3 +50,4 @@ np.savez('template_params/'+which_temp+'.freq_conversions',
 
 # Clean up
 os.system('rm -rf temp.ms')
+os.system('rm -rf template_freqs.txt')

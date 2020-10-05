@@ -26,3 +26,5 @@ infile = cube+'.sim/'+cube+'.sim.alma.cycle7.'+conf_str+'.ms'
 exportuvfits(vis=infile, fitsfile='../template_uvfits/'+cube+'.uvfits',
              datacolumn='data', overwrite=True)
 os.chdir('../')
+
+os.system('rm -rf run_template.txt')

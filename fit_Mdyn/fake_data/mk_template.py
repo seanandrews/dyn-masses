@@ -29,7 +29,7 @@ ch_spacing = 122.          # frequency channel spacing in [kHz]
 restfreq = 230.538e9       # rest frequency of line in [Hz]
 Vsys = 4.0                 # systemic velocity (LSRK) in [km/s]
 Vspan = 15.                # velocity half-span (Vsys +/- ~Vspan) in [km/s]
-spec_oversample = 5        # how many channels per ch_spacing desired?
+spec_oversample = 10       # how many channels per ch_spacing desired?
 
 # target coordinates
 RA = '16:00:00.00'         # phase center RA 
@@ -39,7 +39,7 @@ date = '2021/05/21'        # date string
 
 # observing parameters
 config = '5'               # ALMA configuration
-total_time = '25min'       # total on-source time for simulation
+total_time = '15min'       # total on-source time for simulation
 integ = '30s'              # integration time interval for simulation
 
 
@@ -86,4 +86,4 @@ f.close()
 f = open('run_template.txt', 'w')
 f.write(outfile)
 f.close()
-os.system('casa --nologger --nologfile -c mock_obs_alma.py')
+os.system('casa --nologger --nologfile -c CASA_scripts/mock_obs_alma.py')

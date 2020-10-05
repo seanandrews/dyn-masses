@@ -21,17 +21,14 @@ nchan_out = 121
 
 
 # bookkeeping
-template_file = 'std_medr_medv5x'
-outdata_file  = 'simp3_std_medr_medv'
-
-fetch_freqs = False
+template_file = 'std_medr_medv10x'
+outdata_file = 'simp3_std_medr_medv'
+fetch_freqs = True
 
 
 
 # RMS noise per naturally weighted beam per channel in output
 RMS = 7.44	# in mJy (appropriate for medr_medv)
-RMS = 10.
-#RMS = 10.5	# in mJy
 
 ### Specify simulation parameters
 # free parameters
@@ -54,7 +51,7 @@ if fetch_freqs:
     f = open('template_freqs.txt', 'w')
     f.write(template_file)
     f.close()
-    os.system('casa --nologger --nologfile -c fetch_freqs.py')
+    os.system('casa --nologger --nologfile -c CASA_scripts/fetch_freqs.py')
     print('...Finished frequency calculations.')
 
 io = np.loadtxt('template_params/'+template_file+'.params.txt', dtype=str)
@@ -153,7 +150,7 @@ f.write('template_uvfits/'+template_file+'.uvfits\n')
 f.write(str(chanstart_out)+'\n'+str(chanwidth_out)+'\n')
 f.write(str(nchan_out)+'\n'+str(restfreq/1e9))
 f.close()
-os.system('casa --nologger --nologfile -c make_dummy.py')
+os.system('casa --nologger --nologfile -c CASA_scripts/make_dummy.py')
 
 # Extract the output frequencies
 dum = fits.open('dummy.uvfits')

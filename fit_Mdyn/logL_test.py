@@ -18,7 +18,7 @@ datafile = 'simp3_std_medr_medv_noiseless'
 # spectral signal processing
 chbin = 2               # number of channels to average over
 chpad = 3               # number of channels to pad for SRF convolution
-vlo, vhi = -5., 5.      # low and high LSRK velocities to process, in [km/s]
+vlo, vhi = -1., 9.      # low and high LSRK velocities to process, in [km/s]
 
 
 
@@ -172,7 +172,7 @@ def lnprob_test(theta):
 
 
 # true parameters
-theta_true = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 0.05, 0, 0, 0]
+theta_true = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 0.05, 4.0, 0, 0]
 
 # midpt-interp method 
 t0 = time.time()
