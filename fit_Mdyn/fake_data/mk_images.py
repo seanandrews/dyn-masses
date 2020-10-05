@@ -3,7 +3,7 @@ import numpy as np
 execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 # simulation
-fname = 'simp3_std_medr_medv_noiseless'
+fname = 'simp3_std_medr_medv_noisy'
 
 # frequencies
 chanstart, chanwidth, nchan = '-5.6km/s', '0.16km/s', 121
@@ -63,4 +63,5 @@ exportfits('sim_images/im_'+fname+'.image',
            'sim_images/im_'+fname+'.image.fits', overwrite=True)
 
 # cleanup
-os.system('rm -rf *.last *.log')
+os.system('rm -rf *.last')
+os.system('rm -rf *.log')
