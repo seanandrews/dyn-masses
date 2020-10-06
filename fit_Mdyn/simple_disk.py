@@ -204,13 +204,13 @@ class simple_disk:
                 self.dV_b = np.clip(self.dV_b, 0.0, self.dVmax)
         else:
             if self.dVq is None:
-                self.dVq = -0.5 * self.Tbq
-            self.dV_f = self.dV0 * (self.r_sky_f / self.r0)**self.dVq
+                self.dVq = 0.5 * self.Tbq
+            self.dV_f = self.dV0 * (self.r_sky_f / self.r0)**(-self.dVq)
             self.dV_f = np.clip(self.dV_f, 0.0, self.dVmax)
             if self._flat_disk:
                 self.dV_b = None
             else:
-                self.dV_b = self.dV0 * (self.r_sky_b / self.r0)**self.dVq
+                self.dV_b = self.dV0 * (self.r_sky_b / self.r0)**(-self.dVq)
                 self.dV_b = np.clip(self.dV_b, 0.0, self.dVmax)
 
     def _set_brightness(self):
@@ -348,8 +348,8 @@ class simple_disk:
             dV = csound * np.sqrt(2 * self.mu / self.mu_l + self.xi_nt**2)
         else:
             if self.dVq is None:
-                self.dVq = -0.5 * self.Tbq
-            dV = self.dV0 * (self.r_disk / self.r0)**self.dVq
+                self.dVq = 0.5 * self.Tbq
+            dV = self.dV0 * (self.r_disk / self.r0)**(-self.dVq)
         return np.where(self._in_disk, dV, np.nan)
 
     def _calculate_projected_vkep(self, r, z, t=0.0, inc=90.0):

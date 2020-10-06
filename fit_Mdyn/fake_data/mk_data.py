@@ -32,10 +32,10 @@ RMS = 7.44	# in mJy (appropriate for medr_medv)
 
 ### Specify simulation parameters
 # free parameters
-#       inc, PA, mstar, r_l, z0, zpsi, Tb0, Tbq, Tbmax_b, xi_nt, vsys, dx, dy
-theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 0.05, 4.0, 0, 0]
+#       inc, PA, mstar, r_l, z0, zpsi, Tb0, Tbq, Tbmax_b, dV0, dVq, vsys, dx, dy
+theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 347.6, 0.25, 4.0, 0, 0]
 # fixed parameters
-FOV, dist, Npix, Tbmax, r0, mu_l = 8.0, 150., 256, 500., 10., 28.
+FOV, dist, Npix, Tbmax, r0 = 8.0, 150., 256, 500., 10.
 
 
 
@@ -93,12 +93,12 @@ for i in range(v_LSRK.shape[0]):
     foo = cube_parser(inc=theta[0], PA=theta[1], dist=dist, mstar=theta[2],
                       r0=r0, r_l=theta[3], z0=theta[4], zpsi=theta[5],
                       Tb0=theta[6], Tbq=theta[7], Tbmax=Tbmax, Tbmax_b=theta[8],
-                      xi_nt=theta[9], FOV=FOV, Npix=Npix, mu_l=mu_l,
-                      Vsys=theta[10], restfreq=restfreq, vel=1e3*v_LSRK[i,:])
+                      dV0=theta[9], dVq=theta[10], FOV=FOV, Npix=Npix, 
+                      Vsys=theta[11], restfreq=restfreq, vel=1e3*v_LSRK[i,:])
 
     # sample its Fourier Transform on the template (u,v) spacings
-    mvis = vis_sample(imagefile=foo, uu=tvis.uu, vv=tvis.vv, mu_RA=theta[11],
-                      mu_DEC=theta[12], mod_interp=False)
+    mvis = vis_sample(imagefile=foo, uu=tvis.uu, vv=tvis.vv, mu_RA=theta[12],
+                      mu_DEC=theta[13], mod_interp=False)
 
     # populate the appropriate parts of cloned array with these visibilities
     ix_lo, ix_hi = i * nperstamp, (i + 1) * nperstamp
