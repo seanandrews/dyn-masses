@@ -10,20 +10,21 @@ fname = 'simp3_std_medr_medv_noiseless'
 
 # scale burn-in
 burn_in = 0
+burnin = 500
 
 # calculate autocorrelation time as a function of step?
-calc_tau = False
+calc_tau = True
 Ntau = 100
 
 
 # load the backend; parse the samples
 reader = emcee.backends.HDFBackend('posteriors/'+fname+'.h5')
-if burn_in > 0:
-    tau = reader.get_autocorr_time()
-    burnin = int(burn_in * np.max(tau))
-    thin = int(np.min(tau) / burn_in)
-else:
-    burnin, thin = 0, 0
+#if burn_in > 0:
+#    tau = reader.get_autocorr_time()
+#    burnin = int(burn_in * np.max(tau))
+#    thin = int(np.min(tau) / burn_in)
+#else:
+#    burnin, thin = 0, 0
 all_samples = reader.get_chain(discard=0, flat=False)
 samples = reader.get_chain(discard=burnin, flat=False)
 log_prob_samples = reader.get_log_prob(discard=burnin, flat=False)
