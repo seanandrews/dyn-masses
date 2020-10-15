@@ -125,9 +125,9 @@ FOV, dist, Npix, Tbmax, r0 = 8.0, 150., 256, 500., 10.
 
 # initialize walkers
 p_lo = np.array([ 30, 120, 0.5, 100,   0,  0.5,  155, 
-                 0.2,   5, 300,   0, 3.5, -0.1, -0.1])
+                 0.2,   5, 300, 3.5, -0.1, -0.1])
 p_hi = np.array([ 50, 140, 0.9, 300,   5,  1.5,  255, 
-                 0.8,  30, 400, 0.5, 4.5,  0.1,  0.1])
+                 0.8,  30, 400, 4.5,  0.1,  0.1])
 ndim, nwalk = len(p_lo), 5 * len(p_lo)
 p0 = [np.random.uniform(p_lo, p_hi, ndim) for i in range(nwalk)]
 
@@ -136,8 +136,8 @@ theta = p0[0]
 foo = cube_parser(inc=theta[0], PA=theta[1], dist=dist, mstar=theta[2], r0=r0,
                   r_l=theta[3], z0=theta[4], zpsi=theta[5],
                   Tb0=theta[6], Tbq=theta[7], Tbmax=Tbmax, Tbmax_b=theta[8],
-                  dV0=theta[9], dVq=theta[10], FOV=FOV, Npix=Npix, 
-                  Vsys=theta[11], restfreq=nu_l, vel=v_LSRK_mid)
+                  dV0=theta[9], dVq=0.5*theta[7], FOV=FOV, Npix=Npix, 
+                  Vsys=theta[10], restfreq=nu_l, vel=v_LSRK_mid)
 
 tvis, gcf, corr = vis_sample(imagefile=foo, uu=data.uu, vv=data.vv, 
                              return_gcf=True, return_corr_cache=True, 
