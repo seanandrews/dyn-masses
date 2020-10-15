@@ -6,14 +6,14 @@ import emcee
 import corner
 
 # emcee backend file
-fname = 'simp3_std_medr_medv_noiseless'
+fname = 'simp3_std_medr_highv_1024pix_noiseless'
 
 # scale burn-in
 burn_in = 0
-burnin = 500
+burnin = 00
 
 # calculate autocorrelation time as a function of step?
-calc_tau = True
+calc_tau = False
 Ntau = 100
 
 
@@ -29,6 +29,9 @@ all_samples = reader.get_chain(discard=0, flat=False)
 samples = reader.get_chain(discard=burnin, flat=False)
 log_prob_samples = reader.get_log_prob(discard=burnin, flat=False)
 log_prior_samples = reader.get_blobs(discard=burnin, flat=False)
+maxlnprob = np.max(reader.get_log_prob(discard=0, flat=False))
+minlnprob = np.min(reader.get_log_prob(discard=0, flat=False))
+print(minlnprob, maxlnprob)
 nsteps, nwalk, ndim = samples.shape[0], samples.shape[1], samples.shape[2]
 
 
@@ -64,12 +67,15 @@ fig = plt.figure(figsize=(5, 6))
 gs = gridspec.GridSpec(8, 2)
 
 # lnlike and lnprior at top
+L0 = -123552.21122292383
 ax = fig.add_subplot(gs[0,0])
 for iw in np.arange(nwalk):
-    ax.plot(np.arange(nsteps), log_prob_samples[:, iw], color='k', alpha=0.03)
+    chi2 = -2 * (log_prob_samples[:,iw] - log_prior_samples[:,iw] - L0)
+    #ax.plot(np.arange(nsteps), log_prob_samples[:, iw], color='k', alpha=0.03)
+    ax.plot(np.arange(nsteps), chi2, color='k', alpha=0.03)
     ax.set_xlim([0, nsteps])
-    ax.set_ylim([1.01 * np.min(log_prob_samples[:, iw]),
-                 0.99 * np.max(log_prob_samples[:, iw])])
+    ax.set_ylim([0, 100])
+    ax.plot([0, nsteps], [71.689, 71.689], '-C0', lw=1)
     ax.tick_params(which='both', labelsize=6)
     ax.set_ylabel('log likelihood', fontsize=6)
     ax.set_xticklabels([])

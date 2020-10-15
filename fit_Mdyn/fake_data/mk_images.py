@@ -3,7 +3,7 @@ import numpy as np
 execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 # simulation
-fname = 'simp3_std_medr_medv_noiseless'
+fname = 'simp3_std_medr_medv_shortint_noiseless.tavg'
 
 # frequencies
 chanstart, chanwidth, nchan = '-5.6km/s', '0.16km/s', 121

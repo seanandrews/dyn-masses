@@ -21,11 +21,11 @@ file for future reference (and subsequent use).
 ### Specify template parameters
 
 # bookkeeping
-tname = 'std_medr_medv'     # base filename: append str(spec_oversample)+'x' if
+tname = 'std_medr_highv'    # base filename: append str(spec_oversample)+'x' if
 			    # spec_oversample > 1
 
 # spectral settings
-ch_spacing = 122.          # frequency channel spacing in [kHz]
+ch_spacing = 61.           # frequency channel spacing in [kHz]
 restfreq = 230.538e9       # rest frequency of line in [Hz]
 Vsys = 4.0                 # systemic velocity (LSRK) in [km/s]
 Vspan = 15.                # velocity half-span (Vsys +/- ~Vspan) in [km/s]

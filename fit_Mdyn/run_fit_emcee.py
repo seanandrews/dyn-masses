@@ -18,6 +18,10 @@ os.environ["OMP_NUM_THREADS"] = "1"
 datadir  = 'fake_data/sim_uvfits/'
 datafile = 'simp3_std_medr_medv_noiseless'
 
+# this is the "truth"!
+#theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 347.6, 4.0, 0, 0]
+
+
 # velocity range to fit
 vlo, vhi = -1., 9.	# low and high LSRK velocities to fit [km/s]
 # --> censored ranges should go here too
@@ -64,7 +68,9 @@ data.rfreq = np.mean(data.freqs)
 
 # find the LSRK velocities that correspond to the midpoint of the execution
 # block (*HARD-CODED: still need to figure this out for real data*)
-template_name = '_'.join(datafile.split('_')[1:-1])+'10x'
+#
+#template_name = '_'.join(datafile.split('_')[1:-1])+'10x'
+template_name = 'std_medr_medv10x'
 df = np.load('fake_data/template_params/'+template_name+'.freq_conversions.npz')
 freq_LSRK_t = df['freq_LSRK'][:,::10].copy()
 v_LSRK_t = c_ * (1. - freq_LSRK_t / nu_l)
@@ -76,7 +82,6 @@ vlo_idx = np.max(np.where(v_LSRK_mid < np.min(vlsrk_native))) - 1
 vhi_idx = np.min(np.where(v_LSRK_mid > np.max(vlsrk_native))) + 1
 v_LSRK_mid = v_LSRK_mid[vlo_idx:vhi_idx]
 freq_LSRK_mid = freq_LSRK_mid[vlo_idx:vhi_idx]
-
 
 # make a copy of the input (native) data to bin
 data_bin = copy.deepcopy(data)
@@ -115,6 +120,7 @@ L0 = -0.5 * (np.prod(data_bin.VV.shape) * np.log(2 * np.pi) + np.sum(dterm))
 ### INITIALIZE FOR POSTERIOR SAMPLING
 ### ---------------------------------
 # fixed model parameters
+#FOV, dist, Npix, Tbmax, r0 = 8.0, 150., 256, 500., 10.
 FOV, dist, Npix, Tbmax, r0 = 8.0, 150., 256, 500., 10.
 
 # initialize walkers
@@ -147,6 +153,10 @@ def lnpU(theta, lo, hi):
     else: 
         return -np.inf
 
+# normal
+def lnpN(theta, mu, sig):
+    return -0.5 * np.exp(-0.5 * (theta - mu)**2 / sig**2)
+
 
 ### LOG(POSTERIOR)
 ### --------------
@@ -163,11 +173,10 @@ def lnprob(theta):
     ptheta[6] = lnpU(theta[6], 5., Tbmax)
     ptheta[7] = lnpU(theta[7], 0., 2.)
     ptheta[8] = lnpU(theta[8], 5., 50.)
-    ptheta[9] = lnpU(theta[9], 0., 500.)
-    ptheta[10] = lnpU(theta[10], 0., 2.)
-    ptheta[11] = lnpU(theta[11], 3.5, 4.5)
+    ptheta[9] = lnpU(theta[9], 0., 1000.)
+    ptheta[10] = lnpU(theta[10], 3.5, 4.5)
+    ptheta[11] = lnpU(theta[11], -0.2, 0.2)
     ptheta[12] = lnpU(theta[12], -0.2, 0.2)
-    ptheta[13] = lnpU(theta[13], -0.2, 0.2)
     lnprior = np.sum(ptheta)
     
     # generate a model cube
@@ -175,11 +184,11 @@ def lnprob(theta):
                         mstar=theta[2], r_l=theta[3], z0=theta[4], 
                         zpsi=theta[5], Tb0=theta[6], Tbq=theta[7], 
                         Tbmax=Tbmax, Tbmax_b=theta[8], dV0=theta[9], 
-                        dVq=theta[10], FOV=FOV, Npix=Npix, 
-                        Vsys=theta[11], restfreq=nu_l, vel=v_LSRK_mid)
+                        dVq=0.5*theta[7], FOV=FOV, Npix=Npix, 
+                        Vsys=theta[10], restfreq=nu_l, vel=v_LSRK_mid)
 
     # sample the FT of the cube onto the observed (u,v) points
-    mvis = vis_sample(imagefile=mcube, mu_RA=theta[12], mu_DEC=theta[13], 
+    mvis = vis_sample(imagefile=mcube, mu_RA=theta[11], mu_DEC=theta[12], 
                       gcf_holder=gcf, corr_cache=corr, mod_interp=False)
 
     # window the visibilities
@@ -211,7 +220,6 @@ def lnprob(theta):
 
     # return the posterior
     return lnL + L0 + lnprior, lnprior
-
 
 
 ### CONFIGURE EMCEE BACKEND
