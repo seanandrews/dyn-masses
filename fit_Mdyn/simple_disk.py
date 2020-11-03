@@ -64,12 +64,13 @@ class simple_disk:
 
 
     def __init__(self, inc, PA, x0=0., y0=0., dist=100., mstar=1., 
-                 r_min=0., r_max=500., r0=10., r_l=100., 
+                 r_min=0., r_max=1000., r0=10., r_l=100., 
                  z0=0., zpsi=1., zphi=np.inf,
-                 Tb0=50., Tbq=0.5, Tbeps=np.inf, Tbmax=500., Tbmax_b=20., 
+                 Tb0=50., Tbq=0.5, Tbeps=np.inf, Tbmax=1000., Tbmax_b=20., 
                  tau0=100., tauq=0., taueta=np.inf, taumax=None,
                  dV0=None, dVq=None, dVmax=1000., xi_nt=0.,
                  FOV=None, Npix=128, mu_l=28):
+
 
 
         # Set the disk geometrical properties.
