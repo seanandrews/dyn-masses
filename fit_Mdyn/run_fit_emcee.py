@@ -16,7 +16,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 ### ------------------
 # locate data
 datadir  = 'fake_data/sim_uvfits/'
-datafile = 'simp3_std_medr_medv_rms2_noisy'
+datafile = 'simp3_std_medr_highv_rms1_noisy'
 
 # this is the "truth"!
 #theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 347.6, 4.0, 0, 0]
@@ -70,7 +70,7 @@ data.rfreq = np.mean(data.freqs)
 # block (*HARD-CODED: still need to figure this out for real data*)
 #
 #template_name = '_'.join(datafile.split('_')[1:-1])+'10x'
-template_name = 'std_medr_medv10x'
+template_name = 'std_medr_highv10x'
 df = np.load('fake_data/template_params/'+template_name+'.freq_conversions.npz')
 freq_LSRK_t = df['freq_LSRK'][:,::10].copy()
 v_LSRK_t = c_ * (1. - freq_LSRK_t / nu_l)

@@ -6,11 +6,11 @@ import emcee
 import corner
 
 # emcee backend file
-fname = 'V892Tau_data'
+fname = 'simp3_std_medr_highv_rms0_noisy'
 
 # scale burn-in
 burn_in = 0
-burnin = 000
+burnin = 1000
 
 # calculate autocorrelation time as a function of step?
 calc_tau = False
@@ -29,10 +29,18 @@ all_samples = reader.get_chain(discard=0, flat=False)
 samples = reader.get_chain(discard=burnin, flat=False)
 log_prob_samples = reader.get_log_prob(discard=burnin, flat=False)
 log_prior_samples = reader.get_blobs(discard=burnin, flat=False)
-maxlnprob = np.max(reader.get_log_prob(discard=0, flat=False))
-minlnprob = np.min(reader.get_log_prob(discard=0, flat=False))
-print(minlnprob, maxlnprob)
+print(log_prob_samples.shape)
+print(np.mean(log_prob_samples, axis=0))
+print(np.where(np.mean(log_prob_samples, axis=0) == np.min(np.mean(log_prob_samples, axis=0)))[0][0])
+
+# remove the bad walker
+#bad = np.where(np.mean(log_prob_samples, axis=0) == np.min(np.mean(log_prob_samples, axis=0)))[0]
+#all_samples = np.delete(all_samples, bad, axis=1)
+#samples = np.delete(samples, bad, axis=1)
+#log_prob_samples = np.delete(log_prob_samples, bad, axis=1)
+#log_prior_samples = np.delete(log_prior_samples, bad, axis=1)
 nsteps, nwalk, ndim = samples.shape[0], samples.shape[1], samples.shape[2]
+print(nsteps, nwalk, ndim)
 
 
 # set parameter labels, truths
@@ -67,15 +75,10 @@ fig = plt.figure(figsize=(5, 6))
 gs = gridspec.GridSpec(8, 2)
 
 # lnlike and lnprior at top
-L0 = -123552.21122292383
 ax = fig.add_subplot(gs[0,0])
 for iw in np.arange(nwalk):
-    chi2 = -2 * (log_prob_samples[:,iw] - log_prior_samples[:,iw] - L0)
-    #ax.plot(np.arange(nsteps), log_prob_samples[:, iw], color='k', alpha=0.03)
-    ax.plot(np.arange(nsteps), chi2, color='k', alpha=0.03)
+    ax.plot(np.arange(nsteps), log_prob_samples[:, iw], color='k', alpha=0.3)
     ax.set_xlim([0, nsteps])
-    ax.set_ylim([0, 100])
-    ax.plot([0, nsteps], [71.689, 71.689], '-C0', lw=1)
     ax.tick_params(which='both', labelsize=6)
     ax.set_ylabel('log likelihood', fontsize=6)
     ax.set_xticklabels([])
