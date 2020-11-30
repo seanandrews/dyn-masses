@@ -177,6 +177,8 @@ def lnprob(theta):
     ptheta[11] = lnpU(theta[11], -0.2, 0.2)
     ptheta[12] = lnpU(theta[12], -0.2, 0.2)
     lnprior = np.sum(ptheta)
+    if (lnprior == -np.inf):
+        return -np.inf, -np.inf
     
     # generate a model cube
     mcube = cube_parser(inc=theta[0], PA=theta[1], dist=dist, r0=r0,
