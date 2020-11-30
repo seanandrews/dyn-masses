@@ -16,27 +16,30 @@ Decription of what this code does.
 
 # desired output channels
 chanstart_out = -5.6	# km/s
-chanwidth_out = 0.08	# km/s
-nchan_out = 241
+chanwidth_out = 0.16	# km/s
+nchan_out = 121
 
 
 # bookkeeping
-template_file = 'std_medr_highv10x'
-outdata_file = 'simp3_std_medr_highv_rms9'
+template_file = 'std_medr_medv10x'
+outdata_file = 'simp5_std_medr_medv'
 fetch_freqs = True
 
 
 
 # RMS noise per naturally weighted beam per channel in output
-#RMS = 7.44	# in mJy (appropriate for medr_medv)
-RMS = 10.52     # in mJy (appropriate for medr_highv)
+RMS = 7.44	# in mJy (appropriate for medr_medv)
+#RMS = 10.52     # in mJy (appropriate for medr_highv)
 
 ### Specify simulation parameters
 # free parameters
 #       inc, PA, mstar, r_l, z0, zpsi, Tb0, Tbq, Tbmax_b, dV0, dVq, vsys, dx, dy
-theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 347.6, 0.25, 4.0, 0, 0]
+# simp3
+#theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 347.6, 0.25, 4.0, 0, 0]
+# simp5
+theta = [40, 130, 2.0, 540, 1.5, 1, 330, 0.5, 20, 441.4, 0.25, 4.0, 0, 0]
 # fixed parameters
-FOV, dist, Npix, Tbmax, r0 = 8.0, 150., 256, 500., 10.
+FOV, dist, Npix, Tbmax, r0 = 8.0, 150., 256, 1000., 10.
 
 
 

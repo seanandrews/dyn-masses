@@ -3,7 +3,7 @@ import numpy as np
 execfile('/home/sandrews/mypy/keplerian_mask/keplerian_mask.py')
 
 # simulation
-fname = 'simp3_std_medr_medv_shortint_noiseless.tavg'
+fname = 'simp5_std_medr_medv_noisy'
 
 # frequencies
 chanstart, chanwidth, nchan = '-5.6km/s', '0.16km/s', 121
@@ -16,8 +16,8 @@ imsize = 512
 cell = '0.02arcsec'
 
 # mask parameters
-inc, PA, mstar, dist, zr, Vsys = 40., 310., 0.7, 150., 0.23, 4.
-rmax, nbeams = 1.35, 1.3
+inc, PA, mstar, dist, zr, Vsys = 40., 310., 2.0, 150., 0.15, 4.
+rmax, nbeams = 3.5, 1.3
 
 #########
 
