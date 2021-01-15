@@ -5,8 +5,10 @@ import matplotlib.gridspec as gridspec
 import emcee
 import corner
 
+wdir = '/Users/justinvega/Documents/GitHub/dyn-masses/fit_Mdyn/'
+
 # emcee backend file
-fname = 'simp3_std_medr_highv_1024pix_noiseless'
+fname = 'phys3_std_medr_medv_noiseless'
 
 # scale burn-in
 burn_in = 0
@@ -31,14 +33,14 @@ log_prob_samples = reader.get_log_prob(discard=burnin, flat=False)
 log_prior_samples = reader.get_blobs(discard=burnin, flat=False)
 maxlnprob = np.max(reader.get_log_prob(discard=0, flat=False))
 minlnprob = np.min(reader.get_log_prob(discard=0, flat=False))
-print(minlnprob, maxlnprob)
+#print(minlnprob, maxlnprob)
 nsteps, nwalk, ndim = samples.shape[0], samples.shape[1], samples.shape[2]
 
 
 # set parameter labels, truths
 lbls = ['i', 'PA', 'M', 'r_l', 'z0', 'zpsi', 'Tb0', 'Tbq', 'Tback', 'dV0', 'dVq', 'vsys', 'dx', 'dy']
-theta = [40, 130, 0.7, 200, 2.3, 1.0, 205., 0.5, 20., 347.7, 0.25, 4., 0., 0.]
-
+#theta = [40, 130, 0.1, 40, 3.0, 1, 110, 0.5, 20, 255.6, 4.0, 0, 0]
+theta = [40, 130, 0.7, 200, 2.3, 1, 205, 0.5, 20, 347.6, 4.0, 0, 0]
 
 # plot the integrated autocorrelation time convergence every Ntau steps
 if calc_tau:
@@ -58,7 +60,8 @@ if calc_tau:
         plt.ylabel('autocorr time (steps)')
         plt.xlim([0, Nmax])
         plt.ylim([0, tau_ix.max() + 0.1 * (tau_ix.max() - tau_ix.min())])
-        fig.savefig('mcmc_analysis/'+fname+'.autocorr.png')
+        #plt.show()
+        fig.savefig(wdir + 'posteriors/mcmc_analysis/'+fname+'.autocorr.png')
         fig.clf()
 
 
@@ -107,13 +110,13 @@ for idim in np.arange(ndim):
 fig.subplots_adjust(wspace=0.40, hspace=0.05)
 fig.subplots_adjust(left=0.15, right=0.90, bottom=0.05, top=0.99)
 
-fig.savefig('mcmc_analysis/'+fname+'.traces.png')
+fig.savefig(wdir + 'posteriors/mcmc_analysis/'+fname+'.traces.png')
 fig.clf()
 
-# corner plot to view covariances
-levs = 1. - np.exp(-0.5*(np.arange(3)+1)**2)
-flat_chain = samples.reshape(-1, ndim)
-fig = corner.corner(flat_chain, plot_datapoints=False, levels=levs, 
-                    labels=lbls, truths=theta)
-fig.savefig('mcmc_analysis/'+fname+'.corner.png')
-fig.clf()
+# # corner plot to view covariances
+# levs = 1. - np.exp(-0.5*(np.arange(3)+1)**2)
+# flat_chain = samples.reshape(-1, ndim)
+# fig = corner.corner(flat_chain, plot_datapoints=False, levels=levs,
+#                     labels=lbls, truths=theta)
+# fig.savefig('mcmc_analysis/'+fname+'.corner.png')
+# fig.clf()
